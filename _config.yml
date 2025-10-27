@@ -1,6 +1,7 @@
 title: "via_maximus"
 description: "an engineering log"
-url: "http://127.0.0.1:4000"   # will change to https://viamaximus.com later
+url: "https://viamaximus.com"
+baseurl: ""
 timezone: America/New_York
 
 remote_theme: "viamaximus/windows-95"
