@@ -1,0 +1,20 @@
+# Jekyll output
+_site/
+.jekyll-cache/
+.sass-cache/
+
+#bundled gems
+vendor/bundle/
+.gem/
+
+#nix + direnv
+.direnv/
+.cache/
+result*
+
+#node
+node_modules/
+
+# macOS...
+.DS_Store
+*.swp
