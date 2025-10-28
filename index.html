@@ -1,53 +1,15 @@
 ---
 layout: default
 ---
+<ul>
+  {% for post in site.posts %}
+  <li>
+    <a href="{{ post.url | relative_url }}" title="{{ post.title }}">
+      <img src="{{ '/assets/img/file.ico' | relative_url }}" alt="" title="{{ post.title }}" />
+      {{ post.title }}
+    </a>
+  </li>
+  {% endfor %}
+</ul>
 
-<div class="wrapper">
-  <div class="default_title">
-    <img src="{{ '/assets/img/mycomputer.png' | relative_url }}" />
-    <h1>{{ site.title }}</h1>
-  </div>
-
-  <ul class="topbar">
-    <a href="{{ '/me' | relative_url }}"><li><u>A</u>bout</li></a>
-    <!-- your external links can stay as https:// -->
-    <a href="https://twitter.com/via_maximus" target="_blank"><li>twitter</li></a>
-    <a href="https://github.com/viamaximus" target="_blank"><li>github</li></a>
-  </ul>
-
-  <div class="tag_list">
-    <ul id="tag-list">
-      <li>
-        <a href="{{ '/' | relative_url }}">
-          <img src="{{ '/assets/img/disk.png' | relative_url }}" />(C:)
-        </a>
-        <ul>
-          {% for tag in site.tags %}
-            {% assign tag_name = tag[0] %}
-            <li>
-              <a href="{{ '/tag/' | append: tag_name | slugify | append: '/' | relative_url }}" title="{{ tag_name }}">
-                <img src="{{ '/assets/img/folder.ico' | relative_url }}" />{{ tag_name }}
-              </a>
-            </li>
-          {% endfor %}
-        </ul>
-      </li>
-    </ul>
-  </div>
-
-  <div class="post_list">
-    <ul>
-      {% for post in site.posts %}
-        <li>
-          <a href="{{ post.url | relative_url }}" title="{{ post.title }}">
-            <img src="{{ '/assets/img/file.ico' | relative_url }}" title="{{ post.title }}" />
-            {{ post.title }}
-          </a>
-        </li>
-      {% endfor %}
-    </ul>
-  </div>
-
-  <!-- keep the rest of your template as-is -->
-</div>
 
