@@ -4,7 +4,7 @@ url: "https://viamaximus.com"
 baseurl: ""
 timezone: America/New_York
 
-remote_theme: "viamaximus/windows-95@5196258"
+remote_theme: "viamaximus/windows-95@ae9d8e2"
 
 plugins:
   - jekyll-remote-theme
