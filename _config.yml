@@ -20,3 +20,9 @@ exclude:
   - .jekyll-cache/
   - node_modules/
 
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post

@@ -1,0 +1,21 @@
+---
+layout: default
+---
+
+<h1 style="margin:8px 12px;">Tag: {{ page.tag }}</h1>
+
+{% assign posts_with_tag = site.tags[page.tag] %}
+{% if posts_with_tag and posts_with_tag.size > 0 %}
+  {% assign posts_sorted = posts_with_tag | sort: "date" | reverse %}
+  <ul style="margin:8px 12px; padding-left: 18px;">
+    {% for post in posts_sorted %}
+      <li>
+        <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+        <small> — {{ post.date | date: "%Y-%m-%d" }}</small>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p style="margin:8px 12px;">No posts tagged <strong>{{ page.tag }}</strong> yet.</p>
+{% endif %}
+
