@@ -1,8 +1,8 @@
-name: build & deploy jekyll site to GitHub Pages
+name: Build & Deploy Jekyll to GitHub Pages
 
 on:
   push:
-    branches: ["main"]
+    branches: [ "main" ]
   workflow_dispatch:
 
 permissions:
@@ -18,13 +18,21 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/configure-pages@v5
-      - name: build with jekyll
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build with Jekyll
         uses: actions/jekyll-build-pages@v1
+        env:
+          JEKYLL_ENV: production
+          JEKYLL_CONFIG: _config.yml
         with:
           source: ./
           destination: ./_site
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
