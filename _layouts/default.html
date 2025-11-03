@@ -17,15 +17,13 @@
   {% endif %}
 
   <link rel="stylesheet" href="{{ '/assets/css/font-awesome.min.css' | relative_url }}">
-
-  <!-- Dark theme overrides (inactive until .theme-dark is applied) -->
-  <link rel="stylesheet" href="{{ '/assets/css/dark.css' | relative_url }}">
-
-  <!-- Favicons -->
   <link rel="icon" href="{{ '/assets/img/favicon.ico' | relative_url }}" type="image/x-icon">
   <link rel="shortcut icon" href="{{ '/assets/img/favicon.ico' | relative_url }}" type="image/x-icon">
 
-  <!-- Syntax highlighting -->
+  <!-- Dark theme overrides -->
+  <link rel="stylesheet" href="{{ '/assets/css/dark.css' | relative_url }}">
+
+  <!-- Syntax highlight -->
   <script src="{{ '/assets/js/highlight.pack.js' | relative_url }}"></script>
   <script>try{hljs.highlightAll();}catch(e){}</script>
 </head>
@@ -42,7 +40,7 @@
 
     {% include topbar.html %}
 
-
+    <!-- Window directory panel -->
     <div class="tag_list">
       <ul id="tag-list">
         <li>
@@ -53,8 +51,7 @@
             {% assign tags = site.tags | sort %}
             {% for tag in tags %}
               <li>
-                <a href="{{ '/tag/' | append: tag | first | slugify | append: '/' | relative_url }}"
-                   title="{{ tag[0] | replace:'-', ' ' }}">
+                <a href="{{ '/tag/' | append: tag | first | slugify | append: '/' | relative_url }}">
                   <img src="{{ '/assets/img/folder.ico' | relative_url }}" />{{ tag[0] | replace:'-', ' ' }}
                 </a>
               </li>
@@ -64,39 +61,34 @@
       </ul>
     </div>
 
+    <!-- Post list / tag page / static page logic -->
     <div class="post_list">
       {% if page.url == '/' %}
-        <!-- Homepage: show all posts -->
         <ul>
           {% for post in site.posts %}
             <li>
-              <a href="{{ post.url | relative_url }}" title="{{ post.title }}">
-                <img src="{{ '/assets/img/file.ico' | relative_url }}" title="{{ post.title }}" />
-                {{ post.title }}
+              <a href="{{ post.url | relative_url }}">
+                <img src="{{ '/assets/img/file.ico' | relative_url }}" />{{ post.title }}
               </a>
             </li>
           {% endfor %}
         </ul>
 
       {% elsif page.title == 'me' or page.title == '404...' %}
-        <!-- Static pages: render page content in the right pane -->
         {{ content }}
 
       {% elsif page.date %}
-        <!-- Individual post pages: keep the list on the right pane -->
         <ul>
           {% for post in site.posts %}
             <li>
-              <a href="{{ post.url | relative_url }}" title="{{ post.title }}">
-                <img src="{{ '/assets/img/file.ico' | relative_url }}" title="{{ post.title }}" />
-                {{ post.title }}
+              <a href="{{ post.url | relative_url }}">
+                <img src="{{ '/assets/img/file.ico' | relative_url }}" />{{ post.title }}
               </a>
             </li>
           {% endfor %}
         </ul>
 
       {% else %}
-        <!-- Tag pages (and any other list pages) provide their own content -->
         {{ content }}
       {% endif %}
     </div>
@@ -116,41 +108,46 @@
       <div class="post_title">
         <img src="{{ '/assets/img/file.ico' | relative_url }}" />
         <h1>{{ page.title }}</h1>
-        <a href="{{ '/' | relative_url }}"><div class="btn" title="Close"><span class="fa fa-times"></span></div></a>
+
+        <a href="{{ '/' | relative_url }}">
+          <div class="btn" title="Close"><span class="fa fa-times"></span></div>
+        </a>
+
         <div class="btn btn_max" id="btn-max" aria-pressed="false" title="Maximize"><span class="fa fa-window-maximize"></span></div>
         <div class="btn btn_min" id="btn-min" aria-pressed="false" title="Minimize"><span class="fa fa-window-minimize"></span></div>
       </div>
+
       <ul class="topbar">
         <li>{{ page.date | date: '%B %-d, %Y' }}</li>
       </ul>
+
       <div class="post_content">
         {{ content }}
       </div>
     </div>
   {% endif %}
 
-  <!-- Existing theme scripts -->
+  <!-- Theme JS -->
   <script src="{{ '/assets/js/001.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/002.js' | relative_url }}"></script>
 
-  <!-- Add the theme toggle script -->
-  <script src="{{ '/assets/js/theme-toggle.js' | relative_url }}"></script>
-
-  <!-- Append a Dark toggle button into the top bar if present -->
+  <!-- Append theme toggle button -->
   <script>
     (function () {
       var bar = document.querySelector('.topbar');
       if (!bar || document.getElementById('theme-toggle')) return;
-      try {
-        var li = document.createElement('li');
-        li.id = 'theme-toggle';
-        li.style.cursor = 'pointer';
-        li.title = 'Toggle dark mode';
-        li.innerHTML = '<span class="fa fa-adjust"></span>&nbsp;Dark';
-        bar.appendChild(li);
-      } catch (e) {}
+
+      var li = document.createElement('li');
+      li.id = 'theme-toggle';
+      li.style.cursor = 'pointer';
+      li.title = 'Toggle dark mode';
+      li.innerHTML = '<span class="fa fa-adjust"></span>&nbsp;Dark';
+      bar.appendChild(li);
     })();
   </script>
+
+  <!-- Load toggle logic AFTER button exists -->
+  <script src="{{ '/assets/js/theme-toggle.js' | relative_url }}"></script>
 
   <div class="footer">
     <p>© {{ site.time | date: "%Y" }} {{ site.title }}. Theme adapted from Windows-95. Code on

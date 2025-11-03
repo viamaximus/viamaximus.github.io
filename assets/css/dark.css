@@ -1,21 +1,21 @@
-/* Dark Windows 95-ish palette */
+/* Dark Windows 95 mode — only active when .theme-dark is on <html> */
 :root.theme-dark {
-  --w95-bg: #1c1f24;          /* desktop gray */
-  --w95-window: #2a2e35;      /* window face */
-  --w95-text: #e6e6e6;        /* primary text */
+  --w95-bg: #1c1f24;
+  --w95-window: #2a2e35;
+  --w95-text: #e6e6e6;
   --w95-muted: #b5b5b5;
-  --w95-border-light: #5b5f66;/* light bevel */
-  --w95-border-dark: #0d0f12; /* dark bevel */
-  --w95-accent: #3aa3ff;      /* selection/links */
+  --w95-border-light: #5b5f66;
+  --w95-border-dark: #0d0f12;
+  --w95-accent: #3aa3ff;
 }
 
-/* Desktop/background */
+/* Desktop */
 .theme-dark body {
   background: var(--w95-bg);
   color: var(--w95-text);
 }
 
-/* Explorer frame + content window */
+/* Windows */
 .theme-dark .wrapper,
 .theme-dark .content {
   background: var(--w95-window);
@@ -23,17 +23,16 @@
   border-color: var(--w95-border-dark);
 }
 
-/* Title bars / bars */
+/* Title bars */
 .theme-dark .default_title,
 .theme-dark .post_title,
 .theme-dark .topbar,
 .theme-dark .post_total {
   background: linear-gradient(180deg, #3a3f47 0%, #2a2e35 100%);
   color: var(--w95-text);
-  border-bottom: 1px solid var(--w95-border-dark);
 }
 
-/* Buttons, bevels, lines */
+/* Buttons */
 .theme-dark .btn,
 .theme-dark .btn_max,
 .theme-dark .btn_min {
@@ -41,23 +40,15 @@
   border: 1px solid var(--w95-border-dark);
   color: var(--w95-text);
 }
-.theme-dark .btn:hover { filter: brightness(1.1); }
 
-/* Lists & links */
+/* Links */
 .theme-dark a { color: var(--w95-accent); }
-.theme-dark .tag_list a,
-.theme-dark .post_list a { color: var(--w95-text); }
-.theme-dark .tag_list img,
-.theme-dark .post_list img { filter: brightness(0.9); }
 
-/* Code highlighting base (keeps your atom-one-light but darkens bg) */
-.theme-dark pre, .theme-dark code, .theme-dark .hljs {
+/* Code blocks */
+.theme-dark pre,
+.theme-dark code,
+.theme-dark .hljs {
   background: #1e2329 !important;
-  color: #e6e6e6 !important;
-}
-
-/* dividers */
-.theme-dark .tag_list, .theme-dark .post_list, .theme-dark .post_content {
-  border-color: var(--w95-border-light);
+  color: var(--w95-text) !important;
 }
 
