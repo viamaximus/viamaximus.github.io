@@ -5,6 +5,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 
+  <!-- Base styles -->
   <link rel="stylesheet" href="{{ '/assets/css/atom-one-light.css' | relative_url }}">
 
   {% if page.title or page.title == 'me' %}
@@ -16,14 +17,20 @@
   {% endif %}
 
   <link rel="stylesheet" href="{{ '/assets/css/font-awesome.min.css' | relative_url }}">
+
+  <!-- Dark theme overrides (inactive until .theme-dark is applied) -->
+  <link rel="stylesheet" href="{{ '/assets/css/dark.css' | relative_url }}">
+
+  <!-- Favicons -->
   <link rel="icon" href="{{ '/assets/img/favicon.ico' | relative_url }}" type="image/x-icon">
   <link rel="shortcut icon" href="{{ '/assets/img/favicon.ico' | relative_url }}" type="image/x-icon">
 
+  <!-- Syntax highlighting -->
   <script src="{{ '/assets/js/highlight.pack.js' | relative_url }}"></script>
   <script>try{hljs.highlightAll();}catch(e){}</script>
 </head>
 <body>
-  <div class="wrapper">
+  <div class="wrapper" id="explorer">
     <div class="default_title">
       <img src="{{ '/assets/img/mycomputer.png' | relative_url }}" />
       {% if page.tag %}
@@ -34,6 +41,7 @@
     </div>
 
     {% include topbar.html %}
+
 
     <div class="tag_list">
       <ul id="tag-list">
@@ -56,25 +64,42 @@
       </ul>
     </div>
 
-  <div class="post_list">
-  {% unless page.date%}
-    {% if page.title == 'me' or page.title == '404...' %}
-      <ul>
-        {% for post in site.posts %}
-        <li><a href="{{  post.url }}" title="{{ post.title }}"><img src="{{ '/assets/img/file.ico' | relative_url }}" title="{{ post.title }}" />{{ post.title }}</a></li>
-        {% endfor %}
-      </ul>
-    {% else %}
-      {{ content }}
-    {% endif %}
-  {% else %}
-    <ul>
-      {% for post in site.posts %}
-      <li><a href="{{  post.url }}" title="{{ post.title }}"><img src="{{ '/assets/img/file.ico' | relative_url }}" title="{{ post.title }}" />{{ post.title }}</a></li>
-      {% endfor %}
-    </ul>
-  {% endunless %}
-</div>
+    <div class="post_list">
+      {% if page.url == '/' %}
+        <!-- Homepage: show all posts -->
+        <ul>
+          {% for post in site.posts %}
+            <li>
+              <a href="{{ post.url | relative_url }}" title="{{ post.title }}">
+                <img src="{{ '/assets/img/file.ico' | relative_url }}" title="{{ post.title }}" />
+                {{ post.title }}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+
+      {% elsif page.title == 'me' or page.title == '404...' %}
+        <!-- Static pages: render page content in the right pane -->
+        {{ content }}
+
+      {% elsif page.date %}
+        <!-- Individual post pages: keep the list on the right pane -->
+        <ul>
+          {% for post in site.posts %}
+            <li>
+              <a href="{{ post.url | relative_url }}" title="{{ post.title }}">
+                <img src="{{ '/assets/img/file.ico' | relative_url }}" title="{{ post.title }}" />
+                {{ post.title }}
+              </a>
+            </li>
+          {% endfor %}
+        </ul>
+
+      {% else %}
+        <!-- Tag pages (and any other list pages) provide their own content -->
+        {{ content }}
+      {% endif %}
+    </div>
 
     <div class="post_total">
       {% if page.tag %}
@@ -87,30 +112,50 @@
   </div>
 
   {% if page.title %}
-    <div class="content">
+    <div class="content" id="content-window">
       <div class="post_title">
         <img src="{{ '/assets/img/file.ico' | relative_url }}" />
         <h1>{{ page.title }}</h1>
-        <a href="{{ '/' | relative_url }}"><div class="btn"><span class="fa fa-times"></span></div></a>
-        <div class="btn btn_max"><span class="fa fa-window-maximize"></span></div>
-        <div class="btn"><span class="fa fa-window-minimize"></span></div>
+        <a href="{{ '/' | relative_url }}"><div class="btn" title="Close"><span class="fa fa-times"></span></div></a>
+        <div class="btn btn_max" id="btn-max" aria-pressed="false" title="Maximize"><span class="fa fa-window-maximize"></span></div>
+        <div class="btn btn_min" id="btn-min" aria-pressed="false" title="Minimize"><span class="fa fa-window-minimize"></span></div>
       </div>
       <ul class="topbar">
         <li>{{ page.date | date: '%B %-d, %Y' }}</li>
       </ul>
       <div class="post_content">
         {{ content }}
-        {%- comment -%} {% include donate.html %} {%- endcomment -%}
       </div>
     </div>
   {% endif %}
 
+  <!-- Existing theme scripts -->
   <script src="{{ '/assets/js/001.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/002.js' | relative_url }}"></script>
 
+  <!-- Add the theme toggle script -->
+  <script src="{{ '/assets/js/theme-toggle.js' | relative_url }}"></script>
+
+  <!-- Append a Dark toggle button into the top bar if present -->
+  <script>
+    (function () {
+      var bar = document.querySelector('.topbar');
+      if (!bar || document.getElementById('theme-toggle')) return;
+      try {
+        var li = document.createElement('li');
+        li.id = 'theme-toggle';
+        li.style.cursor = 'pointer';
+        li.title = 'Toggle dark mode';
+        li.innerHTML = '<span class="fa fa-adjust"></span>&nbsp;Dark';
+        bar.appendChild(li);
+      } catch (e) {}
+    })();
+  </script>
+
   <div class="footer">
-    <p>Created by <a href="https://github.com/viamaximus" target="_blank">max</a> | Code licensed under
-      <a href="https://github.com/h01000110/h01000110.github.io/blob/master/LICENSE" target="_blank">MIT License</a></p>
+    <p>© {{ site.time | date: "%Y" }} {{ site.title }}. Theme adapted from Windows-95. Code on
+      <a href="https://github.com/viamaximus" target="_blank">GitHub</a>.
+    </p>
   </div>
 </body>
 </html>
