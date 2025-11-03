@@ -1,4 +1,4 @@
-name: Build & Deploy Jekyll with Nix
+name: Build & Deploy Jekyll (custom Gemfile) to GitHub Pages
 
 on:
   push:
@@ -21,20 +21,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v12
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
 
-      - name: Use Nix cache
-        uses: DeterminateSystems/magic-nix-cache-action@v8
+      - name: Install gems
+        run: bundle install --without development test
 
-      - name: Build site with Jekyll (production) via Nix
+      - name: Build site with Jekyll (production)
         env:
           JEKYLL_ENV: production
-        run: |
-          nix develop -c bash -euxo pipefail <<'EOF'
-          bundle install --without development test
-          bundle exec jekyll build --trace
-          EOF
+        run: bundle exec jekyll build --trace
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
