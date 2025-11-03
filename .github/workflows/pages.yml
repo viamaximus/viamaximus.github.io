@@ -1,4 +1,4 @@
-name: Build & Deploy Jekyll to GitHub Pages
+name: Build & Deploy Jekyll (custom Gemfile) to GitHub Pages
 
 on:
   push:
@@ -21,19 +21,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
 
-      - name: Build with Jekyll
-        uses: actions/jekyll-build-pages@v1
+      - name: Install gems
+        run: bundle install --without development test
+
+      - name: Build site with Jekyll (production)
         env:
           JEKYLL_ENV: production
-          JEKYLL_CONFIG: _config.yml
-        with:
-          source: ./
-          destination: ./_site
+        run: bundle exec jekyll build --trace
 
-      - name: Upload artifact
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./_site
