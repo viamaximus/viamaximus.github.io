@@ -1,36 +1,65 @@
-// By: h01000110 (hi)
-// github.com/h01000110
+// safe behaviors for the fixed article pane
+// this file only affects the built-in bottom content window (not floating ones)
 
-var max = document.getElementsByClassName("btn")[1];
-var min = document.getElementsByClassName("btn")[2];
+(function () {
+  function ready(fn) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', fn, { once: true });
+    } else {
+      fn();
+    }
+  }
 
-function maximize () {
-	var post = document.getElementsByClassName("content")[0];
-	var cont = document.getElementsByClassName("post_content")[0];
-	var wid = window.innerWidth || document.documentElement.clientWidth || document.getElementsByTagName("body")[0].clientWidth;
+  ready(function () {
+    // fixed content window (only exists on post pages)
+    var win = document.getElementById('content-window');
+    if (!win) return;
 
-	if (wid > 900) {
-		widf = wid * 0.9;
-		post.style.width = widf + "px";
+    // locate controls safely
+    var btnMax  = document.getElementById('btn-max')  || null;
+    var btnMin  = document.getElementById('btn-min')  || null;
+    var btnClose = (function () {
+      var all = win.querySelectorAll('.post_title .btn');
+      for (var i = 0; i < all.length; i++) {
+        if (!all[i].classList.contains('btn_max') && !all[i].classList.contains('btn_min')) {
+          return all[i];
+        }
+      }
+      return null;
+    })();
 
-		if (wid < 1400) {
-			cont.style.width = "99%";
-		} else {
-			cont.style.width = "99.4%";
-		}
-	}
-}
+    // minimize hides the fixed pane
+    if (btnMin) {
+      btnMin.addEventListener('click', function (e) {
+        e.preventDefault();
+        win.style.display = 'none';
+        return false;
+      });
+    }
 
-function minimize () {
-	var post = document.getElementsByClassName("content")[0];
-	var cont = document.getElementsByClassName("post_content")[0];
-	var wid = window.innerWidth || document.documentElement.clientWidth || document.getElementsByTagName("body")[0].clientWidth;
+    // maximize toggles a class. window-manager overrides this behavior for floating windows.
+    if (btnMax) {
+      btnMax.addEventListener('click', function (e) {
+        e.preventDefault();
+        win.classList.toggle('is-maximized');
+        return false;
+      });
+    }
 
-	if ( wid > 900 ) {
-		post.style.width = "800px";
-		cont.style.width = "98.5%";
-	}
-}
+    // close behavior is already handled by theme (navigates home via link)
+    // we just prevent errors
+    if (btnClose) {
+      btnClose.addEventListener('click', function () {
+        // no extra logic needed
+      });
+    }
 
-max.addEventListener('click', maximize, false);
-min.addEventListener('click', minimize, false);
+    // esc hides fixed window without crashing
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && win && win.style.display !== 'none') {
+        win.style.display = 'none';
+      }
+    });
+  });
+})();
+
