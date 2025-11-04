@@ -1,0 +1,97 @@
+/* floating article windows */
+.w95-window {
+  position: fixed;
+  left: 8%;
+  top: 10%;
+  width: min(820px, 84vw);
+  height: min(70vh, 760px);
+  background: #c0c0c0;
+  border: 2px solid #000;
+  box-shadow: 0 0 0 2px #808080 inset;
+  display: flex;
+  flex-direction: column;
+  z-index: 9000;
+}
+
+.w95-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 8px;
+  background: linear-gradient(180deg, #00007b, #0a2fa3);
+  color: #fff;
+  cursor: move;
+  user-select: none;
+}
+.w95-titlebar .title {
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.w95-titlebar .controls {
+  display: inline-flex;
+  gap: 6px;
+}
+.w95-btn {
+  width: 22px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #e0e0e0;
+  border: 2px outset #fff;
+  cursor: pointer;
+  color: #000;
+  font: inherit;
+}
+.w95-btn:active { border-style: inset; }
+
+/* visual rows */
+.w95-menubar {
+  background: #d4d0c8;
+  border-bottom: 1px solid #808080;
+  padding: 2px 6px;
+  font-size: 12px;
+  color: #000;
+}
+.w95-body {
+  background: #fff;
+  color: #000;
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 12px;
+}
+
+/* focus layering */
+.w95-window.is-active { z-index: 9500; }
+
+/* maximized */
+.w95-window.is-maximized {
+  left: 0 !important;
+  top: 0 !important;
+  width: 100vw !important;
+  height: calc(100vh - 36px) !important; /* leaves room for taskbar */
+  border-width: 0;
+  box-shadow: none;
+  cursor: default;
+}
+.w95-window.is-maximized .w95-titlebar { cursor: default; }
+
+/* open-in-window link next to posts */
+.open-in-window {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.open-in-window:hover { filter: brightness(0.9); }
+
+/* dark */
+.theme-dark .w95-window { background:#2a2e35; box-shadow: 0 0 0 2px #0d0f12 inset; }
+.theme-dark .w95-menubar { background:#3a3f47; border-bottom-color:#0d0f12; color:#e6e6e6; }
+.theme-dark .w95-body { background:#1e2329; color:#e6e6e6; }
+.theme-dark .w95-titlebar { background: linear-gradient(180deg, #3a3f47, #2a2e35); }
+

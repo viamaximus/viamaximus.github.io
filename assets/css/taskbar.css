@@ -77,3 +77,38 @@
 .theme-dark #start-menu a:hover,
 .theme-dark #start-menu button:hover { background:#2a2e35; }
 
+/* task buttons */
+#task-buttons {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  height: 100%;
+}
+
+.task-button {
+  display: inline-flex;
+  align-items: center;
+  max-width: 220px;
+  height: 28px;
+  padding: 0 10px;
+  background: #e0e0e0;
+  border: 2px outset #fff;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.task-button:active { border-style: inset; }
+.task-button.active { border-style: inset; background: #d8d8d8; }
+.task-button .icon {
+  width: 16px; height: 16px; margin-right: 6px;
+  image-rendering: pixelated; image-rendering: crisp-edges; vertical-align: middle;
+}
+.task-button .label { overflow: hidden; text-overflow: ellipsis; }
+
+/* dark */
+.theme-dark .task-button { background:#3b4048; }
+.theme-dark .task-button.active { background:#333841; }
+
