@@ -1,10 +1,13 @@
+/* fixed win95-ish taskbar */
 #taskbar {
-  position: fixed; left: 0; right: 0; bottom: 0;
+  position: fixed;
+  left: 0; right: 0; bottom: 0;
   height: 36px;
   background: #c0c0c0;
   border-top: 2px solid #808080;
   display: flex; align-items: center; gap: 8px;
-  padding: 4px 6px; z-index: 10000;
+  padding: 4px 6px;
+  z-index: 10000;
   font-family: inherit;
 }
 #taskbar img { width: 16px; height: 16px; vertical-align: middle; margin-right: 6px; }
@@ -17,9 +20,13 @@
 #start-btn:active { border-style: inset; }
 
 #start-menu {
-  position: fixed; bottom: 36px; left: 6px;
-  width: 220px; background: #e0e0e0; border: 2px outset #fff;
+  position: fixed;
+  bottom: 36px; left: 6px;
+  width: 220px;
+  background: #e0e0e0;
+  border: 2px outset #fff;
   box-shadow: 0 0 0 1px #808080 inset;
+  z-index: 10001;
 }
 #start-menu ul { list-style: none; margin: 0; padding: 6px; }
 #start-menu li { margin: 0; padding: 0; }
@@ -30,9 +37,8 @@
 }
 #start-menu a:hover, #start-menu button:hover { background: #c8defc; }
 
+/* separator */
 #start-menu .sep { height: 1px; margin: 6px 0; background: #999; }
-
-#taskbar-spacer { flex: 1; }
 
 /* dark mode variants */
 .theme-dark #taskbar { background:#2a2e35; border-top-color:#0d0f12; }

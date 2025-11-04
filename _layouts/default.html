@@ -20,15 +20,15 @@
   <link rel="icon" href="{{ '/assets/img/favicon.ico' | relative_url }}" type="image/x-icon">
   <link rel="shortcut icon" href="{{ '/assets/img/favicon.ico' | relative_url }}" type="image/x-icon">
 
-  <!-- Force LIGHT as default; only enable dark if saved -->
+  <!-- force light as default before dark overrides load -->
   <script>
     (function () {
       try {
-        var saved = localStorage.getItem('w95-theme');   // 'dark' | 'light' | null
+        var saved = localStorage.getItem('w95-theme');
         if (saved === 'dark') {
           document.documentElement.classList.add('theme-dark');
         } else {
-          document.documentElement.classList.remove('theme-dark'); // default = light
+          document.documentElement.classList.remove('theme-dark');
         }
       } catch (e) {
         document.documentElement.classList.remove('theme-dark');
@@ -36,8 +36,11 @@
     })();
   </script>
 
-  <!-- dark overrides (only apply when .theme-dark is present) -->
+  <!-- optional dark theme overrides (only apply when .theme-dark is present) -->
   <link rel="stylesheet" href="{{ '/assets/css/dark.css' | relative_url }}">
+
+  <!-- taskbar styles -->
+  <link rel="stylesheet" href="{{ '/assets/css/taskbar.css' | relative_url }}">
 
   <!-- syntax highlight -->
   <script src="{{ '/assets/js/highlight.pack.js' | relative_url }}"></script>
@@ -56,7 +59,7 @@
 
     {% include topbar.html %}
 
-    <!-- window directory panel -->
+    <!-- left tree of tags -->
     <div class="tag_list">
       <ul id="tag-list">
         <li>
@@ -79,7 +82,7 @@
       </ul>
     </div>
 
-    <!-- post list / tag page / static page logic -->
+    <!-- right pane list/content -->
     <div class="post_list">
       {% if page.url == '/' %}
         <ul>
@@ -128,11 +131,11 @@
         <h1>{{ page.title }}</h1>
 
         <a href="{{ '/' | relative_url }}">
-          <div class="btn" title="Close"><span class="fa fa-times"></span></div>
+          <div class="btn" title="close"><span class="fa fa-times"></span></div>
         </a>
 
-        <div class="btn btn_max" id="btn-max" aria-pressed="false" title="Maximize"><span class="fa fa-window-maximize"></span></div>
-        <div class="btn btn_min" id="btn-min" aria-pressed="false" title="Minimize"><span class="fa fa-window-minimize"></span></div>
+        <div class="btn btn_max" id="btn-max" aria-pressed="false" title="maximize"><span class="fa fa-window-maximize"></span></div>
+        <div class="btn btn_min" id="btn-min" aria-pressed="false" title="minimize"><span class="fa fa-window-minimize"></span></div>
       </div>
 
       <ul class="topbar">
@@ -145,7 +148,7 @@
     </div>
   {% endif %}
 
-  <!-- theme JS -->
+  <!-- theme js -->
   <script src="{{ '/assets/js/001.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/002.js' | relative_url }}"></script>
 
@@ -158,20 +161,35 @@
       var li = document.createElement('li');
       li.id = 'theme-toggle';
       li.style.cursor = 'pointer';
-      li.title = 'Toggle dark mode';
+      li.title = 'toggle dark mode';
       li.innerHTML = '<span class="fa fa-adjust"></span>&nbsp;Dark';
       bar.appendChild(li);
     })();
   </script>
 
+  <!-- dark toggle logic -->
   <script src="{{ '/assets/js/theme-toggle.js' | relative_url }}"></script>
 
-  <!-- live tag filter (adds filtering + history for /tag/<slug>/) -->
+  <!-- live tag filter (filters right pane and syncs /tag/<slug>/) -->
   <script src="{{ '/assets/js/tag-filter.js' | relative_url }}"></script>
 
+  <!-- small posts index for dos 'dir' command -->
+  <script>
+    window.__W95_POSTS__ = [
+      {% for post in site.posts limit:100 %}
+        { "title": {{ post.title | jsonify }}, "path": "{{ post.url | relative_url }}", "date": "{{ post.date | date: '%Y-%m-%d' }}" }{% unless forloop.last %},{% endunless %}
+      {% endfor %}
+    ];
+  </script>
+
+  <!-- taskbar + start menu + dos prompt -->
+  {% include taskbar.html %}
+  <script src="{{ '/assets/js/start-menu.js' | relative_url }}"></script>
+  <script src="{{ '/assets/js/dos.js' | relative_url }}"></script>
+
   <div class="footer">
-    <p>© {{ site.time | date: "%Y" }} {{ site.title }}. Theme adapted from Windows-95. Code on
-      <a href="https://github.com/viamaximus" target="_blank">GitHub</a>.
+    <p>© {{ site.time | date: "%Y" }} {{ site.title }}. theme adapted from windows-95. code on
+      <a href="https://github.com/viamaximus" target="_blank">github</a>.
     </p>
   </div>
 </body>

@@ -19,16 +19,16 @@
     var title = document.createElement('div');
     title.style.cssText =
       'background:#003300;color:#bff;padding:6px 8px;display:flex;align-items:center;justify-content:space-between;';
-    title.innerHTML = '<strong>DOS Prompt</strong>' +
+    title.innerHTML = '<strong>dos prompt</strong>' +
       '<div><button id="dos-min" style="margin-right:6px">_</button><button id="dos-close">X</button></div>';
 
     var content = document.createElement('div');
     content.id = 'dos-body';
     content.style.cssText = 'flex:1;overflow:auto;padding:8px;font-family:monospace;white-space:pre-wrap;';
     content.textContent =
-      'Microsoft(R) MS-DOS(R) Version 6.22\n' +
-      '(C)Copyright Microsoft Corp 1981-1994.\n\n' +
-      'Type "help" for commands.\n\nC:\\> ';
+      'microsoft(r) ms-dos(r) version 6.22\n' +
+      '(c)copyright microsoft corp 1981-1994.\n\n' +
+      'type "help" for commands.\n\nC:\\> ';
 
     var inp = document.createElement('input');
     inp.id = 'dos-input';
@@ -48,7 +48,7 @@
       win = o.win; input = o.input; body = o.body;
       document.getElementById('dos-close').onclick = close;
       document.getElementById('dos-min').onclick = function () {
-        win.style.display = 'none'; // click Start→DOS to reopen
+        win.style.display = 'none';
       };
       input.addEventListener('keydown', onKey);
     }
@@ -80,14 +80,14 @@
 
     switch (c) {
       case 'help':
-        println('Commands:');
-        println('  help           Show this help');
-        println('  cls|clear      Clear the screen');
-        println('  date           Show date/time');
-        println('  dir            List recent posts');
-        println('  open <path>    Open a URL/path on this site');
-        println('  theme <dark|light>  Switch theme');
-        println('  exit           Close window'); break;
+        println('commands:');
+        println('  help           show this help');
+        println('  cls|clear      clear the screen');
+        println('  date           show date/time');
+        println('  dir            list recent posts');
+        println('  open <path>    open a url/path on this site');
+        println('  theme <dark|light>  switch theme');
+        println('  exit           close window'); break;
 
       case 'cls': case 'clear':
         body.textContent = ''; break;
@@ -102,19 +102,18 @@
         if (/^dark$/i.test(arg)) document.documentElement.classList.add('theme-dark');
         else document.documentElement.classList.remove('theme-dark');
         try { localStorage.setItem('w95-theme', document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light'); } catch(_){}
-        println('Theme set to ' + (document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light'));
+        println('theme set to ' + (document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light'));
         break;
 
       case 'dir':
         try {
-          // basic directory of posts from inline JSON (injected below)
           var posts = window.__W95_POSTS__ || [];
           posts.slice(0, 20).forEach(function (p) { println(p.date + '  ' + p.path); });
-        } catch(e){ println('No posts found.'); }
+        } catch(e){ println('no posts found.'); }
         break;
 
       case 'open':
-        if (!arg) { println('Usage: open /path'); break; }
+        if (!arg) { println('usage: open /path'); break; }
         window.location.href = arg; break;
 
       case '':
