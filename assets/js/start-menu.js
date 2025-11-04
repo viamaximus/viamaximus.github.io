@@ -1,4 +1,5 @@
 (function () {
+  // binds the start button to toggle the start menu
   var start = document.getElementById('start-btn');
   var menu  = document.getElementById('start-menu');
   if (!start || !menu) return;

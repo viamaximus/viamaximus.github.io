@@ -1,4 +1,5 @@
 (function () {
+  // simple dos prompt window opened from start menu
   var openBtn = document.getElementById('open-dos');
   if (!openBtn) return;
 
@@ -47,9 +48,7 @@
       var o = createWindow();
       win = o.win; input = o.input; body = o.body;
       document.getElementById('dos-close').onclick = close;
-      document.getElementById('dos-min').onclick = function () {
-        win.style.display = 'none';
-      };
+      document.getElementById('dos-min').onclick = function () { win.style.display = 'none'; };
       input.addEventListener('keydown', onKey);
     }
     win.style.display = 'flex';
