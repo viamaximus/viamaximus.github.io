@@ -32,13 +32,73 @@
     win.style.zIndex = ++zBase;
   }
 
-  /* drag support */
+  /* geometry + docking */
+  function getContentRect() {
+    var cw = document.getElementById('content-window');
+    if (!cw) return null;
+    var r = cw.getBoundingClientRect();
+    return { left: r.left, top: r.top, width: r.width, height: r.height };
+  }
+  function saveGeometry(win, key) {
+    if (!key) return;
+    var r = win.getBoundingClientRect();
+    saveState(key, {
+      left: r.left, top: r.top, width: r.width, height: r.height,
+      docked: win.classList.contains('is-docked'),
+      prev: win._prevRect || null
+    });
+  }
+  function restoreGeometry(win, key) {
+    var s = key && loadState(key);
+    if (!s) return;
+    if (s.docked && getContentRect()) {
+      var dockRect = getContentRect();
+      win._prevRect = s.prev || { left: 100, top: 100, width: 800, height: 500 };
+      win.classList.add('is-docked');
+      win.style.left = dockRect.left + 'px'; win.style.top = dockRect.top + 'px';
+      win.style.width = dockRect.width + 'px'; win.style.height = dockRect.height + 'px';
+      return;
+    }
+    if (typeof s.left === 'number')  win.style.left = s.left + 'px';
+    if (typeof s.top === 'number')   win.style.top  = s.top + 'px';
+    if (typeof s.width === 'number') win.style.width  = s.width + 'px';
+    if (typeof s.height=== 'number') win.style.height = s.height + 'px';
+  }
+  function dockToggle(win, key) {
+    var dockRect = getContentRect();
+    if (win.classList.contains('is-docked')) {
+      var prev = win._prevRect || { left: 100, top: 100, width: 800, height: 500 };
+      win.classList.remove('is-docked');
+      win.style.left = prev.left + 'px'; win.style.top = prev.top + 'px';
+      win.style.width = prev.width + 'px'; win.style.height = prev.height + 'px';
+      saveGeometry(win, key);
+      focus(win);
+      return;
+    }
+    if (dockRect) {
+      var r = win.getBoundingClientRect();
+      win._prevRect = { left: r.left, top: r.top, width: r.width, height: r.height };
+      win.classList.add('is-docked');
+      win.style.left = dockRect.left + 'px';
+      win.style.top  = dockRect.top + 'px';
+      win.style.width  = dockRect.width + 'px';
+      win.style.height = dockRect.height + 'px';
+      saveState(key, { docked: true, prev: win._prevRect });
+      focus(win);
+    } else {
+      // no content area available → just center it
+      win.style.left = '8%'; win.style.top = '10%';
+      focus(win);
+    }
+  }
+
+  /* drag support (disabled while docked) */
   function makeDraggable(win, handle, onStop) {
     var startX = 0, startY = 0, sx = 0, sy = 0, dragging = false;
 
     handle.addEventListener('mousedown', function (e) {
       if (e.button !== 0) return;
-      if (win.classList.contains('is-maximized') || win.classList.contains('is-docked')) return;
+      if (win.classList.contains('is-docked')) return; // no drag when docked
       dragging = true; focus(win);
       var rect = win.getBoundingClientRect(); sx = rect.left; sy = rect.top;
       startX = e.clientX; startY = e.clientY; e.preventDefault();
@@ -54,97 +114,7 @@
     document.addEventListener('mouseup', function () { if (!dragging) return; dragging = false; if (onStop) onStop(); });
   }
 
-  /* maximize (fullscreen) / dock (into #content-window area) */
-  function getContentRect() {
-    var cw = document.getElementById('content-window');
-    if (!cw) return null;
-    var r = cw.getBoundingClientRect();
-    return { left: r.left, top: r.top, width: r.width, height: r.height };
-  }
-
-  function toggleDockOrMax(win, key) {
-    var dockRect = getContentRect();
-    if (win.classList.contains('is-docked')) {
-      // undock to previous rect
-      var prev = win._prevRect || { left: 100, top: 100, width: 800, height: 500 };
-      win.classList.remove('is-docked');
-      win.style.left = prev.left + 'px'; win.style.top = prev.top + 'px';
-      win.style.width = prev.width + 'px'; win.style.height = prev.height + 'px';
-      saveGeometry(win, key);
-      focus(win);
-      return;
-    }
-    if (dockRect) {
-      // remember current rect, then dock
-      var r = win.getBoundingClientRect();
-      win._prevRect = { left: r.left, top: r.top, width: r.width, height: r.height };
-      win.classList.remove('is-maximized');
-      win.classList.add('is-docked');
-      // set fixed coords to match content window rect
-      win.style.left = dockRect.left + 'px';
-      win.style.top  = dockRect.top + 'px';
-      win.style.width  = dockRect.width + 'px';
-      win.style.height = dockRect.height + 'px';
-      saveState(key, { docked: true, prev: win._prevRect });
-      focus(win);
-    } else {
-      // fallback to fullscreen maximize if no content area
-      toggleMaximize(win, key);
-    }
-  }
-
-  function toggleMaximize(win, key) {
-    var isMax = win.classList.contains('is-maximized');
-    win.classList.remove('is-docked'); // leave dock mode if any
-    if (isMax) {
-      var prev = win._prevRect || { left: 100, top: 100, width: 800, height: 500 };
-      win.classList.remove('is-maximized');
-      win.style.left = prev.left + 'px'; win.style.top = prev.top + 'px';
-      win.style.width = prev.width + 'px'; win.style.height = prev.height + 'px';
-      saveGeometry(win, key); focus(win);
-    } else {
-      var r = win.getBoundingClientRect();
-      win._prevRect = { left: r.left, top: r.top, width: r.width, height: r.height };
-      win.classList.add('is-maximized');
-      saveState(key, { maximized: true, left: r.left, top: r.top, width: r.width, height: r.height });
-      focus(win);
-    }
-  }
-
-  function saveGeometry(win, key) {
-    if (!key) return;
-    var r = win.getBoundingClientRect();
-    saveState(key, {
-      left: r.left, top: r.top, width: r.width, height: r.height,
-      maximized: win.classList.contains('is-maximized'),
-      docked: win.classList.contains('is-docked'),
-      prev: win._prevRect || null
-    });
-  }
-
-  function restoreGeometry(win, key) {
-    var s = key && loadState(key);
-    if (!s) return;
-    if (s.docked && getContentRect()) {
-      var dockRect = getContentRect();
-      win._prevRect = s.prev || { left: 100, top: 100, width: 800, height: 500 };
-      win.classList.add('is-docked');
-      win.style.left = dockRect.left + 'px'; win.style.top = dockRect.top + 'px';
-      win.style.width = dockRect.width + 'px'; win.style.height = dockRect.height + 'px';
-      return;
-    }
-    if (s.maximized) {
-      win._prevRect = { left: s.left, top: s.top, width: s.width, height: s.height };
-      win.classList.add('is-maximized');
-      return;
-    }
-    if (typeof s.left === 'number')  win.style.left = s.left + 'px';
-    if (typeof s.top === 'number')   win.style.top  = s.top + 'px';
-    if (typeof s.width === 'number') win.style.width  = s.width + 'px';
-    if (typeof s.height=== 'number') win.style.height = s.height + 'px';
-  }
-
-  /* fetch post content from an internal url */
+  /* fetch post content and extract title + article html */
   function loadPost(url, titleHint) {
     return fetch(url, { credentials: 'same-origin' })
       .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.text(); })
@@ -154,7 +124,6 @@
         var postTitle = doc.querySelector('.post_title h1')?.textContent;
         var title = postTitle || metaTitle || titleHint || url;
 
-        // try to grab only the article content
         var content =
           doc.querySelector('.post_content') ||
           doc.querySelector('article') ||
@@ -162,15 +131,13 @@
           doc.querySelector('.content') ||
           doc.body;
 
-        // wrap in article class for better typography
         var htmlOut = '<div class="w95-article">' + content.innerHTML + '</div>';
         return { title: title, html: htmlOut };
       });
   }
 
-  /* build menubar dropdowns */
+  /* menubar dropdowns */
   function buildMenus(win, titlebar, menubar, body, taskBtn, key) {
-    // create dropdown container
     var menus = {
       file: [
         { label: 'open in new tab', act: function () { window.open(win.dataset.url, '_blank'); } },
@@ -192,15 +159,14 @@
         } }
       ],
       view: [
-        { label: 'dock/undock', act: function () { toggleDockOrMax(win, key); } },
-        { label: 'maximize/restore', act: function () { toggleMaximize(win, key); } },
+        { label: 'maximize (dock)/restore', act: function () { dockToggle(win, key); } },
         { sep: true },
         { label: 'zoom in', act: function () { var z = parseFloat(body.dataset.zoom||'1'); z = Math.min(2, z+0.1); body.style.transform='scale('+z+')'; body.style.transformOrigin='top left'; body.dataset.zoom=z; } },
         { label: 'zoom out', act: function () { var z = parseFloat(body.dataset.zoom||'1'); z = Math.max(0.6, z-0.1); body.style.transform='scale('+z+')'; body.style.transformOrigin='top left'; body.dataset.zoom=z; } },
         { label: 'reset zoom', act: function () { body.style.transform=''; body.dataset.zoom='1'; } }
       ],
       help: [
-        { label: 'about this window…', act: function () { alert('win95 window • draggable • dock/max • taskbar button • session restore'); } }
+        { label: 'about this window…', act: function () { alert('win95 window • draggable • dock (maximize) • taskbar button • session restore'); } }
       ]
     };
 
@@ -211,9 +177,7 @@
       m.dataset.menu = name;
 
       menus[name].forEach(function (it) {
-        if (it.sep) {
-          var s = document.createElement('div'); s.className = 'sep'; m.appendChild(s); return;
-        }
+        if (it.sep) { var s = document.createElement('div'); s.className = 'sep'; m.appendChild(s); return; }
         var i = document.createElement('div'); i.className = 'item'; i.textContent = it.label;
         i.addEventListener('click', function (e) { e.stopPropagation(); hideMenus(); it.act(); });
         m.appendChild(i);
@@ -222,7 +186,7 @@
       document.body.appendChild(m);
       var r = anchorEl.getBoundingClientRect();
       m.style.left = r.left + 'px'; m.style.top = (r.bottom + 1) + 'px';
-      // close on outside click/esc
+
       setTimeout(function () {
         function outside(ev) { if (!m.contains(ev.target)) { hideMenus(); document.removeEventListener('mousedown', outside); document.removeEventListener('keydown', esc); } }
         function esc(ev) { if (ev.key === 'Escape') { hideMenus(); document.removeEventListener('mousedown', outside); document.removeEventListener('keydown', esc); } }
@@ -230,12 +194,8 @@
         document.addEventListener('keydown', esc);
       }, 0);
     }
+    function hideMenus() { document.querySelectorAll('.w95-menu').forEach(function (x) { x.remove(); }); }
 
-    function hideMenus() {
-      document.querySelectorAll('.w95-menu').forEach(function (x) { x.remove(); });
-    }
-
-    // clickable labels in menubar
     menubar.innerHTML =
       '<span class="menu" data-m="file">File</span>' +
       '<span class="menu" data-m="edit">Edit</span>' +
@@ -248,7 +208,7 @@
     });
   }
 
-  /* create a managed window shell */
+  /* create a managed window shell (now only _, ⬜, X) */
   function spawnWindow(opts) {
     var id = 'w95win-' + (++winCounter);
     var key = opts.key || id;
@@ -266,9 +226,8 @@
     titlebar.innerHTML =
       '<div class="title">' + (opts.title || 'loading...') + '</div>' +
       '<div class="controls">' +
-      '  <button class="w95-btn w95-dock" title="dock/undock">▢</button>' +
-      '  <button class="w95-btn w95-max" title="maximize/restore">⬜</button>' +
       '  <button class="w95-btn w95-min" title="minimize">_</button>' +
+      '  <button class="w95-btn w95-max" title="maximize (dock)/restore">⬜</button>' +
       '  <button class="w95-btn w95-close" title="close">X</button>' +
       '</div>';
 
@@ -282,8 +241,8 @@
     restoreGeometry(win, key);
     makeDraggable(win, titlebar, function () { saveGeometry(win, key); });
 
-    // double-click title bar docks if content area exists, else maximizes
-    titlebar.addEventListener('dblclick', function () { toggleDockOrMax(win, key); });
+    // double-click title bar = dock/restore
+    titlebar.addEventListener('dblclick', function () { dockToggle(win, key); });
 
     var taskBtn = createTaskButton(opts.title || 'window', opts.iconSrc);
     setTaskActive(taskBtn, true);
@@ -293,14 +252,12 @@
       else { win.style.display = 'none'; setTaskActive(taskBtn, false); }
     });
 
-    // control buttons
-    var btnDock  = titlebar.querySelector('.w95-dock');
+    // controls
     var btnMax   = titlebar.querySelector('.w95-max');
     var btnMin   = titlebar.querySelector('.w95-min');
     var btnClose = titlebar.querySelector('.w95-close');
 
-    btnDock.addEventListener('click', function () { toggleDockOrMax(win, key); });
-    btnMax .addEventListener('click', function () { toggleMaximize(win, key); });
+    btnMax .addEventListener('click', function () { dockToggle(win, key); });
     btnMin .addEventListener('click', function () { win.style.display = 'none'; setTaskActive(taskBtn, false); });
     btnClose.addEventListener('click', function () { try { win.remove(); } catch (_) {} try { taskBtn.remove(); } catch (_) {} });
 
@@ -334,7 +291,7 @@
     });
   }
 
-  /* public: open dos as a managed window */
+  /* public: dos prompt window */
   function openDos() {
     var stateKey = 'dos';
     var shell = spawnWindow({
@@ -392,11 +349,10 @@
     }
   }
 
-  /* enhance post list: add [open] and intercept normal clicks */
+  /* enhance post list: keep [open] and intercept normal clicks */
   function enhancePostList() {
     var list = document.querySelector('.post_list'); if (!list) return;
 
-    // add [open] nicety
     Array.prototype.slice.call(list.querySelectorAll('a[href^="/"]')).forEach(function (a) {
       if (a.classList.contains('open-in-window')) return;
       if (a.nextElementSibling && a.nextElementSibling.classList?.contains('open-in-window')) return;
@@ -408,10 +364,9 @@
       a.after(open);
     });
 
-    // intercept regular clicks on file links
     list.addEventListener('click', function (e) {
       var a = e.target.closest('a[href^="/"]'); if (!a) return;
-      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return; // let new-tab behavior through
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
       var hasFileIcon = !!a.querySelector('img[src*="file"]'); if (!hasFileIcon || a.classList.contains('open-in-window')) return;
       e.preventDefault();
       var icon = a.querySelector('img')?.getAttribute('src');
