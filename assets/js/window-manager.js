@@ -77,7 +77,6 @@
   function toggleMaximize(win, key) {
     var isMax = win.classList.contains('is-maximized');
     if (isMax) {
-      // restore from stored prev rect
       var prev = win._prevRect;
       if (prev) {
         win.style.left = prev.left + 'px';
@@ -88,11 +87,9 @@
       win.classList.remove('is-maximized');
       saveGeometry(win, key);
     } else {
-      // remember current rect
       var r = win.getBoundingClientRect();
       win._prevRect = { left: r.left, top: r.top, width: r.width, height: r.height };
       win.classList.add('is-maximized');
-      // store maximized state
       saveState(key, { maximized: true, left: r.left, top: r.top, width: r.width, height: r.height });
     }
     focus(win);
@@ -109,7 +106,6 @@
     var s = key && loadState(key);
     if (!s) return;
     if (s.maximized) {
-      // set previous rect so restore has somewhere to go back to
       win.style.left = (s.left || 0) + 'px';
       win.style.top  = (s.top || 0) + 'px';
       win.style.width  = (s.width || win.offsetWidth) + 'px';
@@ -146,7 +142,6 @@
     win.className = 'w95-window';
     win.id = id;
 
-    // default cascade
     win.style.left = (opts.left || (10 + (winCounter * 2) % 20)) + '%';
     win.style.top  = (opts.top  || (10 + (winCounter * 2) % 20)) + '%';
 
@@ -174,16 +169,11 @@
 
     focus(win);
 
-    // restore saved geometry/maximize
     restoreGeometry(win, key);
 
-    // drag support; on stop, save geometry
     makeDraggable(win, titlebar, function () { saveGeometry(win, key); });
-
-    // double click title bar maximize/restore
     titlebar.addEventListener('dblclick', function () { toggleMaximize(win, key); });
 
-    // taskbutton
     var taskBtn = createTaskButton(opts.title || 'window', opts.iconSrc);
     setTaskActive(taskBtn, true);
 
@@ -198,7 +188,6 @@
       }
     });
 
-    // controls
     var btnMin   = titlebar.querySelector('.w95-min');
     var btnClose = titlebar.querySelector('.w95-close');
 
@@ -210,8 +199,6 @@
     btnClose.addEventListener('click', function () {
       try { win.remove(); } catch (_) {}
       try { taskBtn.remove(); } catch (_) {}
-      // cleanup stored size so next open starts fresh (optional: comment out to persist)
-      // saveState(key, null);
     });
 
     return { win: win, body: body, titlebar: titlebar, taskBtn: taskBtn, key: key };
@@ -237,7 +224,7 @@
     var shell = spawnWindow({
       title: 'dos prompt',
       key: stateKey,
-      iconSrc: '', // no icon by default
+      iconSrc: '',
       html:
         '<div id="dos-body" style="flex:1;overflow:auto;white-space:pre-wrap;font-family:monospace;background:#001500;color:#0f0;padding:8px;"></div>' +
         '<input id="dos-input" type="text" style="width:100%;border:0;outline:none;padding:6px 8px;font-family:monospace;background:#001500;color:#0f0;" />'
@@ -277,7 +264,7 @@
           println('  open <path>        open a url/path on this site');
           println('  theme <dark|light> switch theme');
           println('  exit               close window');
-          println('  secret             ???'); /* tiny easter egg */
+          println('  secret             ???');
           break;
 
         case 'cls': case 'clear':
@@ -319,10 +306,19 @@
     }
   }
 
-  /* enhance post list with [open] controls */
+  /* enhance post list: add [open] link and delegate normal clicks to open a window */
   function enhancePostList() {
-    document.querySelectorAll('.post_list a[href*="/20"]').forEach(function (a) {
+    var list = document.querySelector('.post_list');
+    if (!list) return;
+
+    // add small [open] control next to each file link (optional nicety)
+    Array.prototype.slice.call(list.querySelectorAll('a[href^="/"]')).forEach(function (a) {
+      // skip if already added or if it’s not a file entry (heuristic: has file icon)
+      if (a.classList.contains('open-in-window')) return;
       if (a.nextElementSibling && a.nextElementSibling.classList?.contains('open-in-window')) return;
+      var hasFileIcon = !!a.querySelector('img[src*="file"]');
+      if (!hasFileIcon) return;
+
       var open = document.createElement('a');
       open.href = a.href;
       open.className = 'open-in-window';
@@ -335,9 +331,26 @@
       });
       a.after(open);
     });
+
+    // intercept regular clicks on file entries to open as window
+    list.addEventListener('click', function (e) {
+      var a = e.target.closest('a[href^="/"]');
+      if (!a) return;
+
+      // let modifier clicks behave like normal links (open in new tab etc)
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
+
+      // only intercept file entries (not folders/tags or the [open] link itself)
+      var hasFileIcon = !!a.querySelector('img[src*="file"]');
+      if (!hasFileIcon || a.classList.contains('open-in-window')) return;
+
+      e.preventDefault();
+      var icon = a.querySelector('img')?.getAttribute('src');
+      openPost(a.getAttribute('href'), icon);
+    }, true);
   }
 
-  /* bind start menu dos item to managed dos window */
+  /* bind start menu → dos */
   function bindStartDos() {
     var btn = document.getElementById('open-dos');
     if (!btn) return;
@@ -351,7 +364,9 @@
   enhancePostList();
   bindStartDos();
 
-  /* expose a tiny api for other scripts if needed */
+  /* expose api */
   window.w95Manager = { openPost: openPost, openDos: openDos };
+
+  try { console.log('[w95] window manager loaded'); } catch (_){}
 })();
 
