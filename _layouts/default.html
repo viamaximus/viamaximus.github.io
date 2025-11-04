@@ -5,7 +5,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
 
-  <!-- Base styles -->
+  <!-- base styles -->
   <link rel="stylesheet" href="{{ '/assets/css/atom-one-light.css' | relative_url }}">
 
   {% if page.title or page.title == 'me' %}
@@ -20,10 +20,23 @@
   <link rel="icon" href="{{ '/assets/img/favicon.ico' | relative_url }}" type="image/x-icon">
   <link rel="shortcut icon" href="{{ '/assets/img/favicon.ico' | relative_url }}" type="image/x-icon">
 
-  <!-- Dark theme overrides -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('w95-theme');   // 'dark' | 'light' | null
+        if (saved === 'dark') {
+          document.documentElement.classList.add('theme-dark');
+        } else {
+          document.documentElement.classList.remove('theme-dark'); // default = light
+        }
+      } catch (e) {
+        document.documentElement.classList.remove('theme-dark');
+      }
+    })();
+  </script>
+
   <link rel="stylesheet" href="{{ '/assets/css/dark.css' | relative_url }}">
 
-  <!-- Syntax highlight -->
   <script src="{{ '/assets/js/highlight.pack.js' | relative_url }}"></script>
   <script>try{hljs.highlightAll();}catch(e){}</script>
 </head>
@@ -40,7 +53,7 @@
 
     {% include topbar.html %}
 
-    <!-- Window directory panel -->
+    <!-- window directory panel -->
     <div class="tag_list">
       <ul id="tag-list">
         <li>
@@ -61,7 +74,7 @@
       </ul>
     </div>
 
-    <!-- Post list / tag page / static page logic -->
+    <!-- post list / tag page / static page logic -->
     <div class="post_list">
       {% if page.url == '/' %}
         <ul>
@@ -127,11 +140,11 @@
     </div>
   {% endif %}
 
-  <!-- Theme JS -->
+  <!-- theme JS -->
   <script src="{{ '/assets/js/001.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/002.js' | relative_url }}"></script>
 
-  <!-- Append theme toggle button -->
+  <!-- append theme toggle button -->
   <script>
     (function () {
       var bar = document.querySelector('.topbar');
@@ -146,7 +159,6 @@
     })();
   </script>
 
-  <!-- Load toggle logic AFTER button exists -->
   <script src="{{ '/assets/js/theme-toggle.js' | relative_url }}"></script>
 
   <div class="footer">
