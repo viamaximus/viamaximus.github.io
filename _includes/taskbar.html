@@ -1,16 +1,16 @@
 <div id="taskbar">
-  <button id="start-btn">
-    <img src="{{ '/assets/img/mycomputer.png' | relative_url }}" alt="">
+  <button id="start-btn" aria-expanded="false" aria-controls="start-menu" type="button">
+    <img src="{{ '/assets/img/windows-logo.png' | relative_url }}" alt="">
     <span>Start</span>
   </button>
 
   <div id="start-menu" aria-hidden="true" hidden>
-    <ul>
-      <li><a href="{{ '/' | relative_url }}">home</a></li>
-      <li><a href="{{ '/tags/' | relative_url }}">tags</a></li>
-      <li><a href="{{ '/me/' | relative_url }}">about</a></li>
-      <li class="sep"></li>
-      <li><button id="open-dos" type="button">dos prompt</button></li>
+    <ul role="menu">
+      <li role="none"><a role="menuitem" href="{{ '/' | relative_url }}">home</a></li>
+      <li role="none"><a role="menuitem" href="{{ '/tags/' | relative_url }}">tags</a></li>
+      <li role="none"><a role="menuitem" href="{{ '/me/' | relative_url }}">about</a></li>
+      <li class="sep" role="separator"></li>
+      <li role="none"><button role="menuitem" id="open-dos" type="button">dos prompt</button></li>
     </ul>
   </div>
 
