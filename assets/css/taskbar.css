@@ -10,7 +10,7 @@
   z-index: 10000;
   font-family: inherit;
 }
-#taskbar img { width: 16px; height: 16px; vertical-align: middle; margin-right: 6px; }
+#taskbar img { width: 20px; height: 20px; image-rendering: pixelated; vertical-align: middle; margin-right: 6px; }
 
 #start-btn {
   display: inline-flex; align-items: center; gap: 6px;
