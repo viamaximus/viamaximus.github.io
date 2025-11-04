@@ -33,7 +33,7 @@
   font-family: "MS Sans Serif", Tahoma, sans-serif;
 }
 #start-btn:active { border-style: inset; }
-
+#start-btn span { font-size: 14px; }
 /* start menu panel */
 #start-menu {
   position: fixed;
