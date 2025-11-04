@@ -1,51 +1,42 @@
-// By: h01000110 (hi)
-// github.com/h01000110
+(function () {
+  // highlight the selected tag in the left tree
+  var tagLinks = document.querySelectorAll('.tag_list a');
+  tagLinks.forEach(function (a) {
+    a.addEventListener('click', function () {
+      tagLinks.forEach(function (el) { el.classList.remove('active-folder'); });
+      a.classList.add('active-folder');
+    });
+  });
 
-function numbers () {
-	var fields = document.getElementsByTagName("code");
-	for (field in fields) {
-		var num = 0;
-		var select = fields[field].innerText;
-		var select_f = select.split(/\n/);
-		var tab = document.createElement("table");
+  // highlight the selected file in the right list
+  var fileLinks = document.querySelectorAll('.post_list a');
+  fileLinks.forEach(function (a) {
+    a.addEventListener('click', function () {
+      fileLinks.forEach(function (el) { el.classList.remove('active-file'); });
+      a.classList.add('active-file');
+    });
+  });
 
-		// IF YOU USE MARKDOWN AND YOU HAVE BEEN GETTING ONE ADDITIONAL LINE IN YOUR TAG CODE
-		// UNCOMMENT THE SECTION BELOW
-		
-		/* MARKDOWN SECTION /**/
+  var numbersEl = document.getElementById('numbers');
+  if (numbersEl && typeof numbersEl.textContent === 'string') {
+    var raw = numbersEl.textContent.trim();
+    var parts = (raw || '').split('');
+    var i = 0;
+    setInterval(function () {
+      if (!numbersEl) return;
+      numbersEl.textContent = parts.slice(0, i++).join('');
+      if (i > parts.length) i = 0;
+    }, 120);
+  }
 
-		select_f.splice(-1, 1);
+  var contentClose = document.querySelector('.post_title .btn:not(.btn_max):not(.btn_min)');
+  if (contentClose) {
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        try { contentClose.click(); } catch (_) {}
+      }
+    });
+  }
 
-		/* END OF SECTION*/
+})();
 
-		fields[field].innerHTML = "";
-		fields[field].appendChild(tab);
-		for (line in select_f) {
-			var row = document.createElement("tr");
-			var col = document.createElement("th");
-			var colc = document.createElement("th");
-			col.innerText = num + 1;
-			colc.innerText = select_f[line];
-			row.appendChild(col);
-			row.appendChild(colc);
-			tab.appendChild(row);
-			num = num + 1;
-
-			// STYLE SECTION - If you want, change it below
-
-			col.style.textAlign = "right";
-			colc.style.textAlign = "left";
-			tab.style.border = "0";
-			col.style.border = "0";
-			colc.style.border = "0";
-			col.style.padding = "3px";
-			colc.style.padding = "3px";
-			col.style.borderRight = "2px solid #777777";
-
-			// END OF SECTION
-
-		}
-	}
-}
-
-window.onload = numbers();
