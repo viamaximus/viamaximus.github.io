@@ -10,12 +10,27 @@
   z-index: 10000;
   font-family: inherit;
 }
-#taskbar img { width: 20px; height: 20px; image-rendering: pixelated; vertical-align: middle; margin-right: 6px; }
+#taskbar img { 
+  width: 20px; 
+  height: 20px; 
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  vertical-align: middle;
+  margin-right: 6px;
+  image-rendering: -moz-crisp-edges;
+}
 
 #start-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  height: 28px; padding: 0 10px; cursor: pointer;
-  background: #e0e0e0; border: 2px outset #fff; font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  cursor: pointer;
+  background: #e0e0e0;
+  border: 2px outset #fff;
+  font-weight: 600;
+  font-family: "MS Sans Serif", Tahoma, sans-serif;
 }
 #start-btn:active { border-style: inset; }
 
