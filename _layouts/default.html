@@ -20,6 +20,7 @@
   <link rel="icon" href="{{ '/assets/img/favicon.ico' | relative_url }}" type="image/x-icon">
   <link rel="shortcut icon" href="{{ '/assets/img/favicon.ico' | relative_url }}" type="image/x-icon">
 
+  <!-- Force LIGHT as default; only enable dark if saved -->
   <script>
     (function () {
       try {
@@ -35,8 +36,10 @@
     })();
   </script>
 
+  <!-- dark overrides (only apply when .theme-dark is present) -->
   <link rel="stylesheet" href="{{ '/assets/css/dark.css' | relative_url }}">
 
+  <!-- syntax highlight -->
   <script src="{{ '/assets/js/highlight.pack.js' | relative_url }}"></script>
   <script>try{hljs.highlightAll();}catch(e){}</script>
 </head>
@@ -64,7 +67,9 @@
             {% assign tags = site.tags | sort %}
             {% for tag in tags %}
               <li>
-                <a href="{{ '/tag/' | append: tag | first | slugify | append: '/' | relative_url }}">
+                <a class="tag-link"
+                   data-tag="{{ tag | first | slugify }}"
+                   href="{{ '/tag/' | append: tag | first | slugify | append: '/' | relative_url }}">
                   <img src="{{ '/assets/img/folder.ico' | relative_url }}" />{{ tag[0] | replace:'-', ' ' }}
                 </a>
               </li>
@@ -79,7 +84,7 @@
       {% if page.url == '/' %}
         <ul>
           {% for post in site.posts %}
-            <li>
+            <li class="post-item" data-tags="{{ post.tags | join: ' ' | downcase }}">
               <a href="{{ post.url | relative_url }}">
                 <img src="{{ '/assets/img/file.ico' | relative_url }}" />{{ post.title }}
               </a>
@@ -93,7 +98,7 @@
       {% elsif page.date %}
         <ul>
           {% for post in site.posts %}
-            <li>
+            <li class="post-item" data-tags="{{ post.tags | join: ' ' | downcase }}">
               <a href="{{ post.url | relative_url }}">
                 <img src="{{ '/assets/img/file.ico' | relative_url }}" />{{ post.title }}
               </a>
@@ -160,6 +165,9 @@
   </script>
 
   <script src="{{ '/assets/js/theme-toggle.js' | relative_url }}"></script>
+
+  <!-- live tag filter (adds filtering + history for /tag/<slug>/) -->
+  <script src="{{ '/assets/js/tag-filter.js' | relative_url }}"></script>
 
   <div class="footer">
     <p>© {{ site.time | date: "%Y" }} {{ site.title }}. Theme adapted from Windows-95. Code on
