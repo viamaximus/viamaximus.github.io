@@ -1,5 +1,5 @@
 ---
-title: "test deployment from github pages"
+title: "nixposting v0"
 tags: [nix, unix]
 ---
 
