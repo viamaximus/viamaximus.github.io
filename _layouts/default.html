@@ -187,6 +187,16 @@
   <script src="{{ '/assets/js/start-menu.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/dos.js' | relative_url }}"></script>
 
+  <script>
+  // quick probe to verify the button exists and script ran
+  (function(){
+    var btn = document.getElementById('start-btn');
+    console.log('start-btn present:', !!btn);
+    btn && btn.addEventListener('click', function(){ console.log('start clicked'); });
+  })();
+</script>
+
+
   <div class="footer">
     <p>© {{ site.time | date: "%Y" }} {{ site.title }}. theme adapted from windows-95. code on
       <a href="https://github.com/viamaximus" target="_blank">github</a>.
