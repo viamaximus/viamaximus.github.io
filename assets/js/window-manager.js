@@ -5,7 +5,7 @@
   var zBase = 9000;
   var winCounter = 0;
 
-  /* ---------- util: dock area (fixed pane) ---------- */
+  // util: dock area (fixed pane)
   function ensureDockArea() {
     var dock = document.getElementById('dock-area');
     if (dock) return dock;
@@ -39,6 +39,10 @@
     return dock;
   }
 
+  // track which window currently owns the dock pane
+  function setDockOwner(id) { ensureDockArea().dataset.owner = id || ''; }
+  function getDockOwner() { return ensureDockArea().dataset.owner || ''; }
+
   function setDockContent(data) {
     var dock = ensureDockArea();
     dock.querySelector('#dock-title').textContent = data.title || '';
@@ -47,11 +51,11 @@
     dock.hidden = false;
   }
 
-  /* ---------- storage helpers (session only) ---------- */
+  // storage helpers (session only)
   function saveState(key, data) { try { sessionStorage.setItem('w95:' + key, JSON.stringify(data)); } catch (_) {} }
   function loadState(key) { try { var s = sessionStorage.getItem('w95:' + key); return s ? JSON.parse(s) : null; } catch (_) { return null; } }
 
-  /* ---------- task buttons ---------- */
+  // task buttons
   function createTaskButton(title, iconSrc) {
     var btn = document.createElement('button');
     btn.type = 'button';
@@ -67,14 +71,14 @@
     taskBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
   }
 
-  /* ---------- focus control ---------- */
+  // focus control
   function focus(win) {
     document.querySelectorAll('.w95-window').forEach(function (w) { w.classList.remove('is-active'); });
     win.classList.add('is-active');
     win.style.zIndex = ++zBase;
   }
 
-  /* ---------- drag support (disabled while docked) ---------- */
+  // drag support (disabled while docked)
   function makeDraggable(win, handle, onStop) {
     var startX = 0, startY = 0, sx = 0, sy = 0, dragging = false;
 
@@ -96,7 +100,7 @@
     document.addEventListener('mouseup', function () { if (!dragging) return; dragging = false; if (onStop) onStop(); });
   }
 
-  /* ---------- fetch post content and extract title/date/article ---------- */
+  // fetch post content and extract title/date/article
   function loadPost(url, titleHint) {
     return fetch(url, { credentials: 'same-origin' })
       .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.text(); })
@@ -125,7 +129,7 @@
       });
   }
 
-  /* ---------- menubar dropdowns ---------- */
+  // menubar dropdowns
   function buildMenus(win, titlebar, menubar, body, taskBtn, key) {
     var menus = {
       file: [
@@ -135,7 +139,8 @@
             w.document.write('<title>' + titlebar.querySelector('.title').textContent + '</title>' +
               '<style>body{font:16px/1.5 system-ui, sans-serif; padding:24px;} pre{background:#f5f5f5;padding:10px;overflow:auto;}</style>' +
               body.innerHTML);
-            w.document.close(); w.focus(); w.print(); }
+            w.document.close(); w.focus(); w.print();
+          }
         },
         { sep: true },
         { label: 'close', act: function () { win.querySelector('.w95-close').click(); } }
@@ -145,13 +150,22 @@
         { label: 'select all', act: function () {
             var sel = window.getSelection(); var range = document.createRange();
             range.selectNodeContents(body); sel.removeAllRanges(); sel.addRange(range);
-        } }
+          }
+        }
       ],
       view: [
         { label: 'maximize (dock)/restore', act: function () { dockToggle(win, key); } },
         { sep: true },
-        { label: 'zoom in', act: function () { var z = parseFloat(body.dataset.zoom||'1'); z = Math.min(2, z+0.1); body.style.transform='scale('+z+')'; body.style.transformOrigin='top left'; body.dataset.zoom=z; } },
-        { label: 'zoom out', act: function () { var z = parseFloat(body.dataset.zoom||'1'); z = Math.max(0.6, z-0.1); body.style.transform='scale('+z+')'; body.style.transformOrigin='top left'; body.dataset.zoom=z; } },
+        { label: 'zoom in', act: function () {
+            var z = parseFloat(body.dataset.zoom||'1'); z = Math.min(2, z+0.1);
+            body.style.transform='scale('+z+')'; body.style.transformOrigin='top left'; body.dataset.zoom=z;
+          }
+        },
+        { label: 'zoom out', act: function () {
+            var z = parseFloat(body.dataset.zoom||'1'); z = Math.max(0.6, z-0.1);
+            body.style.transform='scale('+z+')'; body.style.transformOrigin='top left'; body.dataset.zoom=z;
+          }
+        },
         { label: 'reset zoom', act: function () { body.style.transform=''; body.dataset.zoom='1'; } }
       ],
       help: [
@@ -197,7 +211,7 @@
     });
   }
 
-  /* ---------- spawn a floating window (classic three buttons) ---------- */
+  // spawn a floating window (classic three buttons)
   function spawnWindow(opts) {
     var id = 'w95win-' + (++winCounter);
     var key = opts.key || id;
@@ -228,7 +242,7 @@
     document.body.appendChild(win);
 
     focus(win);
-    makeDraggable(win, titlebar, function () { /* could persist pos if desired */ });
+    makeDraggable(win, titlebar, function () { /* persist pos if desired */ });
 
     // double-click title bar = dock/restore
     titlebar.addEventListener('dblclick', function () { dockToggle(win, key); });
@@ -241,33 +255,38 @@
     var btnMin   = titlebar.querySelector('.w95-min');
     var btnClose = titlebar.querySelector('.w95-close');
 
-    btnMax .addEventListener('click', function () { dockToggle(win, key); });
-    btnMin .addEventListener('click', function () {
-      // minimize: hide either the floating window or the docked pane
+    // minimize: if docked, hide dock (minimize); else hide the floating win
+    btnMin.addEventListener('click', function () {
       if (win.dataset.docked === '1') {
-        ensureDockArea().hidden = true;
+        var dock = ensureDockArea();
+        dock.hidden = true;
         setTaskActive(taskBtn, false);
       } else {
         win.style.display = 'none';
         setTaskActive(taskBtn, false);
       }
     });
-    btnClose.addEventListener('click', function () {
-      if (win.dataset.docked === '1') ensureDockArea().hidden = true;
-      try { taskBtn.remove(); } catch (_) {}
-      try { win.remove(); } catch (_) {}
+
+    // maximize: if docked, undock (restore floating); else dock
+    btnMax.addEventListener('click', function () {
+      dockToggle(win, key);
     });
 
-    // clicking task button toggles whatever is active (docked pane vs floating)
-    taskBtn.addEventListener('click', function () {
+    // close: if docked, hide dock, clear owner, remove task + window; else just remove window
+    btnClose.addEventListener('click', function () {
       if (win.dataset.docked === '1') {
         var dock = ensureDockArea();
-        dock.hidden = !dock.hidden;
-        setTaskActive(taskBtn, !dock.hidden);
-      } else {
-        if (win.style.display === 'none') { win.style.display = 'flex'; focus(win); setTaskActive(taskBtn, true); }
-        else { win.style.display = 'none'; setTaskActive(taskBtn, false); }
+        if (getDockOwner() === win.id) {
+          dock.hidden = true;
+          setDockOwner('');
+        }
+        try { taskBtn.remove(); } catch(_) {}
+        try { win.remove(); } catch(_) {}
+        saveState(key, { docked: false });
+        return;
       }
+      try { taskBtn.remove(); } catch(_) {}
+      try { win.remove(); } catch(_) {}
     });
 
     // menus
@@ -282,12 +301,13 @@
     return { win: win, body: body, titlebar: titlebar, taskBtn: taskBtn, key: key };
   }
 
-  /* ---------- dock/restore into fixed pane ---------- */
+  // dock/restore into fixed pane
   function dockToggle(win, key) {
     var dock = ensureDockArea();
 
     if (win.dataset.docked === '1') {
       // restore to floating
+      if (getDockOwner() === win.id) setDockOwner('');
       dock.hidden = true;
       win.dataset.docked = '0';
       win.style.display = 'flex';
@@ -299,10 +319,10 @@
 
     // dock: move content/title/date into dock pane, hide floating window
     var title = win._titlebar.querySelector('.title')?.textContent || '';
-    // date is unknown from the already loaded body; try to sniff a date from the fetched content markup
     var dateEl = win._body.querySelector('time, .post_meta time, .post_title + .topbar li');
     var dateText = dateEl ? (dateEl.getAttribute('datetime') || dateEl.textContent || '') : '';
 
+    setDockOwner(win.id);
     setDockContent({ title: title, html: win._body.innerHTML, date: dateText });
     win.style.display = 'none';
     win.dataset.docked = '1';
@@ -310,7 +330,7 @@
     saveState(key, { docked: true });
   }
 
-  /* ---------- public: open a post ---------- */
+  // public: open a post
   function openPost(url, iconSrc, titleHint) {
     var stateKey = 'post:' + url;
     var shell = spawnWindow({ title: titleHint || 'loading…', iconSrc: iconSrc, key: stateKey, url: url });
@@ -331,7 +351,7 @@
     });
   }
 
-  /* ---------- public: dos prompt ---------- */
+  // public: dos prompt
   function openDos() {
     var stateKey = 'dos';
     var shell = spawnWindow({
@@ -389,7 +409,7 @@
     }
   }
 
-  /* ---------- enhance post list: [open] + intercept ---------- */
+  // enhance post list: [open] + intercept
   function enhancePostList() {
     var list = document.querySelector('.post_list'); if (!list) return;
 
@@ -414,18 +434,18 @@
     }, true);
   }
 
-  /* ---------- bind start menu → dos ---------- */
+  // bind start menu → dos
   function bindStartDos() {
     var btn = document.getElementById('open-dos');
     if (!btn) return;
     btn.addEventListener('click', function (e) { e.preventDefault(); openDos(); });
   }
 
-  /* ---------- init ---------- */
+  // init
   enhancePostList();
   bindStartDos();
 
-  // api (in case we want to script it)
+  // api
   window.w95Manager = { openPost: openPost, openDos: openDos };
 
   try { console.log('[w95] window manager loaded'); } catch (_){}
