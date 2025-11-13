@@ -5,12 +5,10 @@
   var zBase = 9000;
   var winCounter = 0;
 
-  // util: dock area (fixed pane)
   function ensureDockArea() {
     var dock = document.getElementById('dock-area');
     if (dock) return dock;
 
-    // create a classic bottom content window structure
     dock = document.createElement('div');
     dock.id = 'dock-area';
     dock.className = 'content';
@@ -26,11 +24,9 @@
       '<ul class="topbar"><li id="dock-date"></li></ul>' +
       '<div class="post_content" id="dock-content"></div>';
 
-    // insert right after the main wrapper so it sits below the explorer panes
     var wrapper = document.querySelector('.wrapper') || document.body;
     wrapper.insertAdjacentElement('afterend', dock);
 
-    // close button hides the dock
     var closeBtn = dock.querySelector('#dock-close');
     closeBtn.addEventListener('click', function () {
       dock.hidden = true;
@@ -39,7 +35,6 @@
     return dock;
   }
 
-  // track which window currently owns the dock pane
   function setDockOwner(id) { ensureDockArea().dataset.owner = id || ''; }
   function getDockOwner() { return ensureDockArea().dataset.owner || ''; }
 
@@ -51,11 +46,9 @@
     dock.hidden = false;
   }
 
-  // storage helpers (session only)
   function saveState(key, data) { try { sessionStorage.setItem('w95:' + key, JSON.stringify(data)); } catch (_) {} }
   function loadState(key) { try { var s = sessionStorage.getItem('w95:' + key); return s ? JSON.parse(s) : null; } catch (_) { return null; } }
 
-  // task buttons
   function createTaskButton(title, iconSrc) {
     var btn = document.createElement('button');
     btn.type = 'button';
@@ -71,14 +64,12 @@
     taskBtn.setAttribute('aria-pressed', active ? 'true' : 'false');
   }
 
-  // focus control
   function focus(win) {
     document.querySelectorAll('.w95-window').forEach(function (w) { w.classList.remove('is-active'); });
     win.classList.add('is-active');
     win.style.zIndex = ++zBase;
   }
 
-  // drag support (disabled while docked)
   function makeDraggable(win, handle, onStop) {
     var startX = 0, startY = 0, sx = 0, sy = 0, dragging = false;
 
@@ -97,10 +88,13 @@
       win.style.top  = Math.max(0, Math.min(window.innerHeight - 60, sy + dy)) + 'px';
     });
 
-    document.addEventListener('mouseup', function () { if (!dragging) return; dragging = false; if (onStop) onStop(); });
+    document.addEventListener('mouseup', function () {
+      if (!dragging) return;
+      dragging = false;
+      if (onStop) onStop();
+    });
   }
 
-  // fetch post content and extract title/date/article
   function loadPost(url, titleHint) {
     return fetch(url, { credentials: 'same-origin' })
       .then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.text(); })
@@ -110,7 +104,6 @@
         var postTitle = doc.querySelector('.post_title h1')?.textContent;
         var title = postTitle || metaTitle || titleHint || url;
 
-        // try to get date like the built-in viewer
         var date =
           doc.querySelector('.content > .topbar li')?.textContent ||
           doc.querySelector('time')?.getAttribute('datetime') ||
@@ -123,13 +116,12 @@
           doc.querySelector('.content') ||
           doc.body;
 
-        // wrap a bit for nicer typography inside floating window
         var htmlOut = '<div class="w95-article">' + content.innerHTML + '</div>';
         return { title: title, html: htmlOut, date: date };
       });
   }
 
-  // menubar dropdowns
+  // file/edit/view/help menus
   function buildMenus(win, titlebar, menubar, body, taskBtn, key) {
     var menus = {
       file: [
@@ -158,18 +150,26 @@
         { sep: true },
         { label: 'zoom in', act: function () {
             var z = parseFloat(body.dataset.zoom||'1'); z = Math.min(2, z+0.1);
-            body.style.transform='scale('+z+')'; body.style.transformOrigin='top left'; body.dataset.zoom=z;
+            body.style.transform = 'scale(' + z + ')';
+            body.style.transformOrigin = 'top left';
+            body.dataset.zoom = z;
           }
         },
         { label: 'zoom out', act: function () {
             var z = parseFloat(body.dataset.zoom||'1'); z = Math.max(0.6, z-0.1);
-            body.style.transform='scale('+z+')'; body.style.transformOrigin='top left'; body.dataset.zoom=z;
+            body.style.transform = 'scale(' + z + ')';
+            body.style.transformOrigin = 'top left';
+            body.dataset.zoom = z;
           }
         },
-        { label: 'reset zoom', act: function () { body.style.transform=''; body.dataset.zoom='1'; } }
+        { label: 'reset zoom', act: function () {
+            body.style.transform = '';
+            body.dataset.zoom = '1';
+          }
+        }
       ],
       help: [
-        { label: 'about this window…', act: function () { alert('win95 window • draggable • dock into fixed pane • taskbar button • session restore'); } }
+        { label: 'about this window…', act: function () { alert('win95 window: draggable, dockable, taskbar button, basic menus'); } }
       ]
     };
 
@@ -180,24 +180,51 @@
       m.dataset.menu = name;
 
       menus[name].forEach(function (it) {
-        if (it.sep) { var s = document.createElement('div'); s.className = 'sep'; m.appendChild(s); return; }
-        var i = document.createElement('div'); i.className = 'item'; i.textContent = it.label;
-        i.addEventListener('click', function (e) { e.stopPropagation(); hideMenus(); it.act(); });
+        if (it.sep) {
+          var s = document.createElement('div');
+          s.className = 'sep';
+          m.appendChild(s);
+          return;
+        }
+        var i = document.createElement('div');
+        i.className = 'item';
+        i.textContent = it.label;
+        i.addEventListener('click', function (e) {
+          e.stopPropagation();
+          hideMenus();
+          it.act();
+        });
         m.appendChild(i);
       });
 
       document.body.appendChild(m);
       var r = anchorEl.getBoundingClientRect();
-      m.style.left = r.left + 'px'; m.style.top = (r.bottom + 1) + 'px';
+      m.style.left = r.left + 'px';
+      m.style.top = (r.bottom + 1) + 'px';
 
       setTimeout(function () {
-        function outside(ev) { if (!m.contains(ev.target)) { hideMenus(); document.removeEventListener('mousedown', outside); document.removeEventListener('keydown', esc); } }
-        function esc(ev) { if (ev.key === 'Escape') { hideMenus(); document.removeEventListener('mousedown', outside); document.removeEventListener('keydown', esc); } }
+        function outside(ev) {
+          if (!m.contains(ev.target)) {
+            hideMenus();
+            document.removeEventListener('mousedown', outside);
+            document.removeEventListener('keydown', esc);
+          }
+        }
+        function esc(ev) {
+          if (ev.key === 'Escape') {
+            hideMenus();
+            document.removeEventListener('mousedown', outside);
+            document.removeEventListener('keydown', esc);
+          }
+        }
         document.addEventListener('mousedown', outside);
         document.addEventListener('keydown', esc);
       }, 0);
     }
-    function hideMenus() { document.querySelectorAll('.w95-menu').forEach(function (x) { x.remove(); }); }
+
+    function hideMenus() {
+      document.querySelectorAll('.w95-menu').forEach(function (x) { x.remove(); });
+    }
 
     menubar.innerHTML =
       '<span class="menu" data-m="file">File</span>' +
@@ -206,12 +233,42 @@
       '<span class="menu" data-m="help">Help</span>';
 
     menubar.addEventListener('click', function (e) {
-      var m = e.target.closest('.menu'); if (!m) return;
+      var m = e.target.closest('.menu');
+      if (!m) return;
       showMenu(m.dataset.m, m);
     });
   }
 
-  // spawn a floating window (classic three buttons)
+  // dock/restore into fixed pane
+  function dockToggle(win, key) {
+    var dock = ensureDockArea();
+
+    if (win.dataset.docked === '1') {
+      // undock: back to floating
+      if (getDockOwner() === win.id) setDockOwner('');
+      dock.hidden = true;
+      win.dataset.docked = '0';
+      win.style.display = 'flex';
+      focus(win);
+      setTaskActive(win._taskBtn, true);
+      saveState(key, { docked: false });
+      return;
+    }
+
+    // dock: put content in bottom pane, hide floating
+    var title = win._titlebar.querySelector('.title')?.textContent || '';
+    var dateEl = win._body.querySelector('time, .post_meta time, .post_title + .topbar li');
+    var dateText = dateEl ? (dateEl.getAttribute('datetime') || dateEl.textContent || '') : '';
+
+    setDockOwner(win.id);
+    setDockContent({ title: title, html: win._body.innerHTML, date: dateText });
+    win.style.display = 'none';
+    win.dataset.docked = '1';
+    setTaskActive(win._taskBtn, true);
+    saveState(key, { docked: true });
+  }
+
+  // spawn a floating window (single post)
   function spawnWindow(opts) {
     var id = 'w95win-' + (++winCounter);
     var key = opts.key || id;
@@ -235,64 +292,85 @@
       '  <button class="w95-btn w95-close" title="close">X</button>' +
       '</div>';
 
-    var menubar = document.createElement('div'); menubar.className = 'w95-menubar';
-    var body = document.createElement('div'); body.className = 'w95-body'; body.innerHTML = opts.html || '<p>loading…</p>';
+    var menubar = document.createElement('div');
+    menubar.className = 'w95-menubar';
 
-    win.appendChild(titlebar); win.appendChild(menubar); win.appendChild(body);
+    var body = document.createElement('div');
+    body.className = 'w95-body';
+    body.innerHTML = opts.html || '<p>loading…</p>';
+
+    win.appendChild(titlebar);
+    win.appendChild(menubar);
+    win.appendChild(body);
     document.body.appendChild(win);
 
     focus(win);
-    makeDraggable(win, titlebar, function () { /* persist pos if desired */ });
+    makeDraggable(win, titlebar, function () {});
 
     // double-click title bar = dock/restore
-    titlebar.addEventListener('dblclick', function () { dockToggle(win, key); });
+    titlebar.addEventListener('dblclick', function () {
+      dockToggle(win, key);
+    });
 
     var taskBtn = createTaskButton(opts.title || 'window', opts.iconSrc);
     setTaskActive(taskBtn, true);
 
-    // controls
     var btnMax   = titlebar.querySelector('.w95-max');
     var btnMin   = titlebar.querySelector('.w95-min');
     var btnClose = titlebar.querySelector('.w95-close');
 
-    // minimize: if docked, hide dock (minimize); else hide the floating win
+    // helpers for taskbar behavior
+    function isShown(el) { return el.style.display !== 'none'; }
+    function showWin() { win.style.display = 'flex'; focus(win); setTaskActive(taskBtn, true); }
+    function hideWin() { win.style.display = 'none'; setTaskActive(taskBtn, false); }
+
+    // taskbar button toggles visibility
+    taskBtn.addEventListener('click', function () {
+      if (win.dataset.docked === '1') {
+        var dock = ensureDockArea();
+        dock.hidden = !dock.hidden;
+        setTaskActive(taskBtn, !dock.hidden);
+      } else {
+        if (isShown(win)) hideWin();
+        else showWin();
+      }
+    });
+
+    // minimize
     btnMin.addEventListener('click', function () {
       if (win.dataset.docked === '1') {
         var dock = ensureDockArea();
         dock.hidden = true;
         setTaskActive(taskBtn, false);
       } else {
-        win.style.display = 'none';
-        setTaskActive(taskBtn, false);
+        hideWin();
       }
     });
 
-    // maximize: if docked, undock (restore floating); else dock
+    // maximize / dock
     btnMax.addEventListener('click', function () {
       dockToggle(win, key);
     });
 
-    // close: if docked, hide dock, clear owner, remove task + window; else just remove window
+    // close: always remove window and taskbar button
     btnClose.addEventListener('click', function () {
       if (win.dataset.docked === '1') {
         var dock = ensureDockArea();
         if (getDockOwner() === win.id) {
           dock.hidden = true;
           setDockOwner('');
+        } else {
+          dock.hidden = true;
         }
-        try { taskBtn.remove(); } catch(_) {}
-        try { win.remove(); } catch(_) {}
-        saveState(key, { docked: false });
-        return;
       }
-      try { taskBtn.remove(); } catch(_) {}
-      try { win.remove(); } catch(_) {}
+      try { taskBtn.remove(); } catch (_) {}
+      try { win.remove(); } catch (_) {}
+      saveState(key, { docked: false });
     });
 
     // menus
     buildMenus(win, titlebar, menubar, body, taskBtn, key);
 
-    // expose useful refs
     win._titlebar = titlebar;
     win._menubar = menubar;
     win._body = body;
@@ -301,36 +379,7 @@
     return { win: win, body: body, titlebar: titlebar, taskBtn: taskBtn, key: key };
   }
 
-  // dock/restore into fixed pane
-  function dockToggle(win, key) {
-    var dock = ensureDockArea();
-
-    if (win.dataset.docked === '1') {
-      // restore to floating
-      if (getDockOwner() === win.id) setDockOwner('');
-      dock.hidden = true;
-      win.dataset.docked = '0';
-      win.style.display = 'flex';
-      focus(win);
-      setTaskActive(win._taskBtn, true);
-      saveState(key, { docked: false });
-      return;
-    }
-
-    // dock: move content/title/date into dock pane, hide floating window
-    var title = win._titlebar.querySelector('.title')?.textContent || '';
-    var dateEl = win._body.querySelector('time, .post_meta time, .post_title + .topbar li');
-    var dateText = dateEl ? (dateEl.getAttribute('datetime') || dateEl.textContent || '') : '';
-
-    setDockOwner(win.id);
-    setDockContent({ title: title, html: win._body.innerHTML, date: dateText });
-    win.style.display = 'none';
-    win.dataset.docked = '1';
-    setTaskActive(win._taskBtn, true);
-    saveState(key, { docked: true });
-  }
-
-  // public: open a post
+  // open a post in a managed window
   function openPost(url, iconSrc, titleHint) {
     var stateKey = 'post:' + url;
     var shell = spawnWindow({ title: titleHint || 'loading…', iconSrc: iconSrc, key: stateKey, url: url });
@@ -340,7 +389,6 @@
       shell.taskBtn.querySelector('.label').textContent = data.title;
       shell.body.innerHTML = data.html;
 
-      // if this url was previously docked in the session, re-dock immediately
       var s = loadState(stateKey);
       if (s && s.docked) {
         dockToggle(shell.win, stateKey);
@@ -351,11 +399,14 @@
     });
   }
 
-  // public: dos prompt
+  // dos prompt in a window
   function openDos() {
     var stateKey = 'dos';
     var shell = spawnWindow({
-      title: 'dos prompt', key: stateKey, iconSrc: '', url: '#dos',
+      title: 'dos prompt',
+      key: stateKey,
+      iconSrc: '',
+      url: '#dos',
       html:
         '<div id="dos-body" style="flex:1;overflow:auto;white-space:pre-wrap;font-family:monospace;background:#001500;color:#0f0;padding:8px;"></div>' +
         '<input id="dos-input" type="text" style="width:100%;border:0;outline:none;padding:6px 8px;font-family:monospace;background:#001500;color:#0f0;" />'
@@ -363,9 +414,10 @@
 
     var body = shell.body.querySelector('#dos-body');
     var input = shell.body.querySelector('#dos-input');
-    function print(t){ body.textContent += t; body.scrollTop = body.scrollHeight; }
-    function println(t){ print((t||'') + '\n'); }
-    function prompt(){ print('\nC:\\> '); }
+
+    function print(t) { body.textContent += t; body.scrollTop = body.scrollHeight; }
+    function println(t) { print((t || '') + '\n'); }
+    function prompt() { print('\nC:\\> '); }
 
     body.textContent =
       'microsoft(r) ms-dos(r) version 6.22\n' +
@@ -374,80 +426,131 @@
 
     input.addEventListener('keydown', function (e) {
       if (e.key !== 'Enter') return;
-      var cmd = input.value.trim(); input.value = ''; println(cmd); handle(cmd); prompt();
+      var cmd = input.value.trim();
+      input.value = '';
+      println(cmd);
+      handle(cmd);
+      prompt();
     });
 
     function handle(cmd) {
-      var parts = cmd.split(/\s+/); var c = (parts[0]||'').toLowerCase(); var arg = parts.slice(1).join(' ');
+      var parts = cmd.split(/\s+/);
+      var c = (parts[0] || '').toLowerCase();
+      var arg = parts.slice(1).join(' ');
+
       switch (c) {
         case 'help':
-          println('commands:'); println('  help               show this help');
+          println('commands:');
+          println('  help               show this help');
           println('  cls|clear          clear the screen');
           println('  date               show date/time');
           println('  dir                list recent posts');
           println('  open <path>        open a url/path on this site');
           println('  theme <dark|light> switch theme');
-          println('  exit               close window'); println('  secret             ???'); break;
-        case 'cls': case 'clear': body.textContent = ''; break;
-        case 'date': println(new Date().toString()); break;
-        case 'exit': try { shell.titlebar.querySelector('.w95-close').click(); } catch(_) {} break;
+          println('  exit               close window');
+          println('  secret             ???');
+          break;
+        case 'cls':
+        case 'clear':
+          body.textContent = '';
+          break;
+        case 'date':
+          println(new Date().toString());
+          break;
+        case 'exit':
+          try { shell.titlebar.querySelector('.w95-close').click(); } catch (_) {}
+          break;
         case 'theme':
           if (/^dark$/i.test(arg)) document.documentElement.classList.add('theme-dark');
           else document.documentElement.classList.remove('theme-dark');
-          try { localStorage.setItem('w95-theme', document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light'); } catch(_){}
-          println('theme set to ' + (document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light')); break;
+          try {
+            localStorage.setItem(
+              'w95-theme',
+              document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light'
+            );
+          } catch (_) {}
+          println('theme set to ' + (document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light'));
+          break;
         case 'dir':
-          try { (window.__W95_POSTS__ || []).slice(0, 20).forEach(function (p) { println(p.date + '  ' + p.path); }); }
-          catch(e){ println('no posts found.'); } break;
+          try {
+            (window.__W95_POSTS__ || []).slice(0, 20).forEach(function (p) {
+              println(p.date + '  ' + p.path);
+            });
+          } catch (e) {
+            println('no posts found.');
+          }
+          break;
         case 'open':
-          if (!arg) { println('usage: open /path'); break; }
-          window.location.href = arg; break;
-        case 'secret': println('you found the secret. keep exploring.'); break;
-        case '': break;
-        default: println("'" + c + "' is not recognized as an internal or external command.");
+          if (!arg) {
+            println('usage: open /path');
+            break;
+          }
+          window.location.href = arg;
+          break;
+        case 'secret':
+          println('you found the secret. keep exploring.');
+          break;
+        case '':
+          break;
+        default:
+          println("'" + c + "' is not recognized as an internal or external command.");
       }
     }
   }
 
-  // enhance post list: [open] + intercept
+  // add [open] links and intercept main clicks
   function enhancePostList() {
-    var list = document.querySelector('.post_list'); if (!list) return;
+    var list = document.querySelector('.post_list');
+    if (!list) return;
 
     Array.prototype.slice.call(list.querySelectorAll('a[href^="/"]')).forEach(function (a) {
       if (a.classList.contains('open-in-window')) return;
       if (a.nextElementSibling && a.nextElementSibling.classList?.contains('open-in-window')) return;
-      var hasFileIcon = !!a.querySelector('img[src*="file"]'); if (!hasFileIcon) return;
+      var hasFileIcon = !!a.querySelector('img[src*="file"]');
+      if (!hasFileIcon) return;
 
       var open = document.createElement('a');
-      open.href = a.href; open.className = 'open-in-window'; open.textContent = '[open]'; open.title = 'open in window';
-      open.addEventListener('click', function (e) { e.preventDefault(); var icon = a.querySelector('img')?.getAttribute('src'); openPost(a.href, icon, a.textContent.trim()); });
+      open.href = a.href;
+      open.className = 'open-in-window';
+      open.textContent = '[open]';
+      open.title = 'open in window';
+      open.addEventListener('click', function (e) {
+        e.preventDefault();
+        var icon = a.querySelector('img')?.getAttribute('src');
+        openPost(a.href, icon, a.textContent.trim());
+      });
       a.after(open);
     });
 
     list.addEventListener('click', function (e) {
-      var a = e.target.closest('a[href^="/"]'); if (!a) return;
+      var a = e.target.closest('a[href^="/"]');
+      if (!a) return;
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1) return;
-      var hasFileIcon = !!a.querySelector('img[src*="file"]'); if (!hasFileIcon || a.classList.contains('open-in-window')) return;
+      var hasFileIcon = !!a.querySelector('img[src*="file"]');
+      if (!hasFileIcon || a.classList.contains('open-in-window')) return;
       e.preventDefault();
       var icon = a.querySelector('img')?.getAttribute('src');
       openPost(a.getAttribute('href'), icon, a.textContent.trim());
     }, true);
   }
 
-  // bind start menu → dos
+  // hook start menu "dos prompt" item if present
   function bindStartDos() {
     var btn = document.getElementById('open-dos');
     if (!btn) return;
-    btn.addEventListener('click', function (e) { e.preventDefault(); openDos(); });
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      openDos();
+    });
   }
 
   // init
   enhancePostList();
   bindStartDos();
 
-  // api
+  // expose a small api if needed from console
   window.w95Manager = { openPost: openPost, openDos: openDos };
 
-  try { console.log('[w95] window manager loaded'); } catch (_){}
+  try { console.log('[w95] window manager loaded'); } catch (_) {}
 })();
 
