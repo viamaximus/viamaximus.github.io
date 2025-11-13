@@ -29,6 +29,19 @@
 
     var closeBtn = dock.querySelector('#dock-close');
     closeBtn.addEventListener('click', function () {
+      var ownerId = getDockOwner();
+      if (ownerId) {
+        var win = document.getElementById(ownerId);
+        if (win) {
+          try {
+            if (win._taskBtn) win._taskBtn.remove();
+          } catch (_) {}
+          try {
+            win.remove();
+          } catch (_) {}
+        }
+        setDockOwner('');
+      }
       dock.hidden = true;
     });
 
@@ -76,16 +89,22 @@
     handle.addEventListener('mousedown', function (e) {
       if (e.button !== 0) return;
       if (win.dataset.docked === '1') return;
-      dragging = true; focus(win);
-      var rect = win.getBoundingClientRect(); sx = rect.left; sy = rect.top;
-      startX = e.clientX; startY = e.clientY; e.preventDefault();
+      dragging = true;
+      focus(win);
+      var rect = win.getBoundingClientRect();
+      sx = rect.left;
+      sy = rect.top;
+      startX = e.clientX;
+      startY = e.clientY;
+      e.preventDefault();
     });
 
     document.addEventListener('mousemove', function (e) {
       if (!dragging) return;
-      var dx = e.clientX - startX; var dy = e.clientY - startY;
+      var dx = e.clientX - startX;
+      var dy = e.clientY - startY;
       win.style.left = Math.max(0, Math.min(window.innerWidth - 80, sx + dx)) + 'px';
-      win.style.top  = Math.max(0, Math.min(window.innerHeight - 60, sy + dy)) + 'px';
+      win.style.top = Math.max(0, Math.min(window.innerHeight - 60, sy + dy)) + 'px';
     });
 
     document.addEventListener('mouseup', function () {
@@ -121,27 +140,33 @@
       });
   }
 
-  // file/edit/view/help menus
   function buildMenus(win, titlebar, menubar, body, taskBtn, key) {
     var menus = {
       file: [
         { label: 'open in new tab', act: function () { window.open(win.dataset.url, '_blank'); } },
         { label: 'print…', act: function () {
             var w = window.open('', '_blank');
-            w.document.write('<title>' + titlebar.querySelector('.title').textContent + '</title>' +
+            w.document.write(
+              '<title>' + titlebar.querySelector('.title').textContent + '</title>' +
               '<style>body{font:16px/1.5 system-ui, sans-serif; padding:24px;} pre{background:#f5f5f5;padding:10px;overflow:auto;}</style>' +
-              body.innerHTML);
-            w.document.close(); w.focus(); w.print();
+              body.innerHTML
+            );
+            w.document.close();
+            w.focus();
+            w.print();
           }
         },
         { sep: true },
         { label: 'close', act: function () { win.querySelector('.w95-close').click(); } }
       ],
       edit: [
-        { label: 'find (ctrl+f)', act: function () { try { document.execCommand('find'); } catch(_) {} } },
+        { label: 'find (ctrl+f)', act: function () { try { document.execCommand('find'); } catch (_) {} } },
         { label: 'select all', act: function () {
-            var sel = window.getSelection(); var range = document.createRange();
-            range.selectNodeContents(body); sel.removeAllRanges(); sel.addRange(range);
+            var sel = window.getSelection();
+            var range = document.createRange();
+            range.selectNodeContents(body);
+            sel.removeAllRanges();
+            sel.addRange(range);
           }
         }
       ],
@@ -149,14 +174,16 @@
         { label: 'maximize (dock)/restore', act: function () { dockToggle(win, key); } },
         { sep: true },
         { label: 'zoom in', act: function () {
-            var z = parseFloat(body.dataset.zoom||'1'); z = Math.min(2, z+0.1);
+            var z = parseFloat(body.dataset.zoom || '1');
+            z = Math.min(2, z + 0.1);
             body.style.transform = 'scale(' + z + ')';
             body.style.transformOrigin = 'top left';
             body.dataset.zoom = z;
           }
         },
         { label: 'zoom out', act: function () {
-            var z = parseFloat(body.dataset.zoom||'1'); z = Math.max(0.6, z-0.1);
+            var z = parseFloat(body.dataset.zoom || '1');
+            z = Math.max(0.6, z - 0.1);
             body.style.transform = 'scale(' + z + ')';
             body.style.transformOrigin = 'top left';
             body.dataset.zoom = z;
@@ -239,12 +266,10 @@
     });
   }
 
-  // dock/restore into fixed pane
   function dockToggle(win, key) {
     var dock = ensureDockArea();
 
     if (win.dataset.docked === '1') {
-      // undock: back to floating
       if (getDockOwner() === win.id) setDockOwner('');
       dock.hidden = true;
       win.dataset.docked = '0';
@@ -255,7 +280,6 @@
       return;
     }
 
-    // dock: put content in bottom pane, hide floating
     var title = win._titlebar.querySelector('.title')?.textContent || '';
     var dateEl = win._body.querySelector('time, .post_meta time, .post_title + .topbar li');
     var dateText = dateEl ? (dateEl.getAttribute('datetime') || dateEl.textContent || '') : '';
@@ -268,7 +292,6 @@
     saveState(key, { docked: true });
   }
 
-  // spawn a floating window (single post)
   function spawnWindow(opts) {
     var id = 'w95win-' + (++winCounter);
     var key = opts.key || id;
@@ -307,7 +330,6 @@
     focus(win);
     makeDraggable(win, titlebar, function () {});
 
-    // double-click title bar = dock/restore
     titlebar.addEventListener('dblclick', function () {
       dockToggle(win, key);
     });
@@ -319,12 +341,10 @@
     var btnMin   = titlebar.querySelector('.w95-min');
     var btnClose = titlebar.querySelector('.w95-close');
 
-    // helpers for taskbar behavior
     function isShown(el) { return el.style.display !== 'none'; }
     function showWin() { win.style.display = 'flex'; focus(win); setTaskActive(taskBtn, true); }
     function hideWin() { win.style.display = 'none'; setTaskActive(taskBtn, false); }
 
-    // taskbar button toggles visibility
     taskBtn.addEventListener('click', function () {
       if (win.dataset.docked === '1') {
         var dock = ensureDockArea();
@@ -336,7 +356,6 @@
       }
     });
 
-    // minimize
     btnMin.addEventListener('click', function () {
       if (win.dataset.docked === '1') {
         var dock = ensureDockArea();
@@ -347,12 +366,10 @@
       }
     });
 
-    // maximize / dock
     btnMax.addEventListener('click', function () {
       dockToggle(win, key);
     });
 
-    // close: always remove window and taskbar button
     btnClose.addEventListener('click', function () {
       if (win.dataset.docked === '1') {
         var dock = ensureDockArea();
@@ -368,7 +385,6 @@
       saveState(key, { docked: false });
     });
 
-    // menus
     buildMenus(win, titlebar, menubar, body, taskBtn, key);
 
     win._titlebar = titlebar;
@@ -379,27 +395,26 @@
     return { win: win, body: body, titlebar: titlebar, taskBtn: taskBtn, key: key };
   }
 
-  // open a post in a managed window
   function openPost(url, iconSrc, titleHint) {
     var stateKey = 'post:' + url;
-    var shell = spawnWindow({ title: titleHint || 'loading…', iconSrc: iconSrc, key: stateKey, url: url });
+
+    var shell = spawnWindow({
+      title: titleHint || 'loading…',
+      iconSrc: iconSrc,
+      key: stateKey,
+      url: url
+    });
 
     loadPost(url, titleHint).then(function (data) {
       shell.titlebar.querySelector('.title').textContent = data.title;
       shell.taskBtn.querySelector('.label').textContent = data.title;
       shell.body.innerHTML = data.html;
-
-      var s = loadState(stateKey);
-      if (s && s.docked) {
-        dockToggle(shell.win, stateKey);
-      }
     }).catch(function (err) {
       shell.titlebar.querySelector('.title').textContent = 'error';
       shell.body.innerHTML = '<p>failed to load: ' + String(err) + '</p>';
     });
   }
 
-  // dos prompt in a window
   function openDos() {
     var stateKey = 'dos';
     var shell = spawnWindow({
@@ -469,7 +484,8 @@
               document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light'
             );
           } catch (_) {}
-          println('theme set to ' + (document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light'));
+          println('theme set to ' +
+            (document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light'));
           break;
         case 'dir':
           try {
@@ -498,7 +514,6 @@
     }
   }
 
-  // add [open] links and intercept main clicks
   function enhancePostList() {
     var list = document.querySelector('.post_list');
     if (!list) return;
@@ -534,7 +549,6 @@
     }, true);
   }
 
-  // hook start menu "dos prompt" item if present
   function bindStartDos() {
     var btn = document.getElementById('open-dos');
     if (!btn) return;
@@ -544,11 +558,9 @@
     });
   }
 
-  // init
   enhancePostList();
   bindStartDos();
 
-  // expose a small api if needed from console
   window.w95Manager = { openPost: openPost, openDos: openDos };
 
   try { console.log('[w95] window manager loaded'); } catch (_) {}
