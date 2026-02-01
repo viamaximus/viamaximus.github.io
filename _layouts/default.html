@@ -22,26 +22,6 @@
 
   <link rel="stylesheet" href="{{ '/assets/css/windows.css' | relative_url }}?v={{ site.time | date: '%s' }}">
 
-
-  <!-- force light as default before dark overrides load -->
-  <script>
-    (function () {
-      try {
-        var saved = localStorage.getItem('w95-theme');
-        if (saved === 'dark') {
-          document.documentElement.classList.add('theme-dark');
-        } else {
-          document.documentElement.classList.remove('theme-dark');
-        }
-      } catch (e) {
-        document.documentElement.classList.remove('theme-dark');
-      }
-    })();
-  </script>
-
-  <!-- optional dark theme overrides (only apply when .theme-dark is present) -->
-  <link rel="stylesheet" href="{{ '/assets/css/dark.css' | relative_url }}">
-
   <!-- taskbar styles -->
   <link rel="stylesheet" href="{{ '/assets/css/taskbar.css' | relative_url }}">
 
@@ -98,7 +78,7 @@
           {% endfor %}
         </ul>
 
-      {% elsif page.title == 'me' or page.title == '404...' %}
+      {% elsif page.title == '404...' %}
         {{ content }}
 
       {% elsif page.date %}
@@ -111,6 +91,9 @@
             </li>
           {% endfor %}
         </ul>
+
+      {% elsif page.title %}
+        <!-- Pages with titles render in #content-window only, not here -->
 
       {% else %}
         {{ content }}
@@ -155,24 +138,6 @@
   <script src="{{ '/assets/js/001.js' | relative_url }}"></script>
   <script src="{{ '/assets/js/002.js' | relative_url }}"></script>
 
-  <!-- append theme toggle button -->
-  <script>
-    (function () {
-      var bar = document.querySelector('.topbar');
-      if (!bar || document.getElementById('theme-toggle')) return;
-
-      var li = document.createElement('li');
-      li.id = 'theme-toggle';
-      li.style.cursor = 'pointer';
-      li.title = 'toggle dark mode';
-      li.innerHTML = '<span class="fa fa-adjust"></span>&nbsp;Dark';
-      bar.appendChild(li);
-    })();
-  </script>
-
-  <!-- dark toggle logic -->
-  <script src="{{ '/assets/js/theme-toggle.js' | relative_url }}"></script>
-
   <!-- live tag filter (filters right pane and syncs /tag/<slug>/) -->
   <script src="{{ '/assets/js/tag-filter.js' | relative_url }}"></script>
 
@@ -185,10 +150,9 @@
     ];
   </script>
 
-  <!-- taskbar + start menu + dos prompt -->
+  <!-- taskbar + start menu -->
   {% include taskbar.html %}
   <script src="{{ '/assets/js/start-menu.js' | relative_url }}"></script>
-  <script src="{{ '/assets/js/dos.js' | relative_url }}"></script>
 
   <script>
   // quick probe to verify the button exists and script ran
