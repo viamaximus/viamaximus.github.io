@@ -112,3 +112,18 @@
 .theme-dark .task-button { background:#3b4048; }
 .theme-dark .task-button.active { background:#333841; }
 
+/* clock in system tray */
+#taskbar-clock {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 8px;
+  background: #e0e0e0;
+  border: 2px inset #fff;
+  font-size: 12px;
+  font-family: "MS Sans Serif", Tahoma, sans-serif;
+  min-width: 70px;
+  justify-content: center;
+}
+
