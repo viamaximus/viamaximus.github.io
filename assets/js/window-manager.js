@@ -4,6 +4,7 @@
 
   var zBase = 9000;
   var winCounter = 0;
+  var windowRegistry = {}; // track windows by key to prevent duplicates
 
   function ensureDockArea() {
     var dock = document.getElementById('dock-area');
@@ -28,11 +29,19 @@
     wrapper.insertAdjacentElement('afterend', dock);
 
     var closeBtn = dock.querySelector('#dock-close');
-    closeBtn.addEventListener('click', function () {
+    closeBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
       var ownerId = getDockOwner();
       if (ownerId) {
         var win = document.getElementById(ownerId);
         if (win) {
+          // find and delete from registry
+          for (var key in windowRegistry) {
+            if (windowRegistry[key] === win) {
+              delete windowRegistry[key];
+              break;
+            }
+          }
           try {
             if (win._taskBtn) win._taskBtn.remove();
           } catch (_) {}
@@ -370,16 +379,18 @@
       dockToggle(win, key);
     });
 
-    btnClose.addEventListener('click', function () {
+    btnClose.addEventListener('click', function (e) {
+      e.stopPropagation();
+      // if docked, clean up dock area
       if (win.dataset.docked === '1') {
         var dock = ensureDockArea();
         if (getDockOwner() === win.id) {
-          dock.hidden = true;
           setDockOwner('');
-        } else {
           dock.hidden = true;
         }
       }
+      // always remove window and taskbar button
+      delete windowRegistry[key];
       try { taskBtn.remove(); } catch (_) {}
       try { win.remove(); } catch (_) {}
       saveState(key, { docked: false });
@@ -392,20 +403,51 @@
     win._body = body;
     win._taskBtn = taskBtn;
 
+    // register window in registry
+    windowRegistry[key] = win;
+
     return { win: win, body: body, titlebar: titlebar, taskBtn: taskBtn, key: key };
   }
 
   function openPost(url, iconSrc, titleHint) {
-    var stateKey = 'post:' + url;
+    // normalize URL to relative path to ensure consistent keys
+    var normalizedUrl = url;
+    try {
+      var urlObj = new URL(url, window.location.origin);
+      normalizedUrl = urlObj.pathname;
+    } catch (e) {
+      // if URL parsing fails, use as-is
+      normalizedUrl = url;
+    }
+
+    var stateKey = 'post:' + normalizedUrl;
+
+    // check if window already exists
+    var existingWin = windowRegistry[stateKey];
+    if (existingWin && document.body.contains(existingWin)) {
+      // window exists, focus it instead of creating a new one
+      if (existingWin.dataset.docked === '1') {
+        // if docked, show the dock area
+        var dock = ensureDockArea();
+        dock.hidden = false;
+        setTaskActive(existingWin._taskBtn, true);
+      } else {
+        // if floating, show and focus the window
+        existingWin.style.display = 'flex';
+        focus(existingWin);
+        setTaskActive(existingWin._taskBtn, true);
+      }
+      return;
+    }
 
     var shell = spawnWindow({
       title: titleHint || 'loading…',
       iconSrc: iconSrc,
       key: stateKey,
-      url: url
+      url: normalizedUrl
     });
 
-    loadPost(url, titleHint).then(function (data) {
+    loadPost(normalizedUrl, titleHint).then(function (data) {
       shell.titlebar.querySelector('.title').textContent = data.title;
       shell.taskBtn.querySelector('.label').textContent = data.title;
       shell.body.innerHTML = data.html;
@@ -417,6 +459,23 @@
 
   function openDos() {
     var stateKey = 'dos';
+
+    // check if DOS window already exists
+    var existingWin = windowRegistry[stateKey];
+    if (existingWin && document.body.contains(existingWin)) {
+      // window exists, focus it instead of creating a new one
+      if (existingWin.dataset.docked === '1') {
+        var dock = ensureDockArea();
+        dock.hidden = false;
+        setTaskActive(existingWin._taskBtn, true);
+      } else {
+        existingWin.style.display = 'flex';
+        focus(existingWin);
+        setTaskActive(existingWin._taskBtn, true);
+      }
+      return;
+    }
+
     var shell = spawnWindow({
       title: 'dos prompt',
       key: stateKey,
@@ -461,7 +520,6 @@
           println('  date               show date/time');
           println('  dir                list recent posts');
           println('  open <path>        open a url/path on this site');
-          println('  theme <dark|light> switch theme');
           println('  exit               close window');
           println('  secret             ???');
           break;
@@ -474,18 +532,6 @@
           break;
         case 'exit':
           try { shell.titlebar.querySelector('.w95-close').click(); } catch (_) {}
-          break;
-        case 'theme':
-          if (/^dark$/i.test(arg)) document.documentElement.classList.add('theme-dark');
-          else document.documentElement.classList.remove('theme-dark');
-          try {
-            localStorage.setItem(
-              'w95-theme',
-              document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light'
-            );
-          } catch (_) {}
-          println('theme set to ' +
-            (document.documentElement.classList.contains('theme-dark') ? 'dark' : 'light'));
           break;
         case 'dir':
           try {
